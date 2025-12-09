@@ -8,9 +8,16 @@
     {
       "src": "*.mp3",
       "use": "@vercel/static"
+    },
+    {
+      "src": "assets/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
-    { "src": "/", "dest": "/index.html" }
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
   ]
 }
