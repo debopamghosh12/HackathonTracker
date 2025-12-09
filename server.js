@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(__dirname));
+app.use(express.static('pages'));
+app.use('/assets', express.static('assets'));
 
 // --- DATABASE CONNECTION ---
 mongoose.connect(process.env.MONGO_URL)
@@ -83,5 +85,11 @@ app.put('/api/hackathons/:id', async (req, res) => {
         res.json(updatedHack);
     } catch (err) { res.status(500).json({ error: "Update failed" }); }
 });
+
+// Serve frontend pages (SPA fallback)
+app.get('/login', (req, res) => res.sendFile(__dirname + '/pages/login.html'));
+app.get('/dashboard', (req, res) => res.sendFile(__dirname + '/pages/dashboard.html'));
+app.get('/report', (req, res) => res.sendFile(__dirname + '/pages/report.html'));
+app.get('/', (req, res) => res.sendFile(__dirname + '/pages/index.html'));
 
 app.listen(PORT, () => { console.log(`🚀 Server running on port ${PORT}`); });
