@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Report</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap');
+        body { background: #555; display: flex; justify-content: center; padding: 20px; font-family: 'Poppins', sans-serif; }
+        .page { background: white; width: 210mm; min-height: 297mm; padding: 20mm; box-shadow: 0 0 20px rgba(0,0,0,0.5); position: relative; color: #000; }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
+        .header p { margin: 5px 0 0; color: #555; font-size: 12px; }
+        .section { margin-bottom: 25px; }
+        .label { font-weight: bold; color: #444; font-size: 14px; text-transform: uppercase; margin-bottom: 5px; border-left: 4px solid #000; padding-left: 10px; }
+        .value { font-size: 16px; margin-left: 14px; }
+        .status-box { display: inline-block; padding: 5px 15px; border-radius: 5px; font-weight: bold; color: white; background: #333; margin-top: 5px; }
+        .proof-link { display: block; color: #0000EE; text-decoration: none; margin-left: 14px; margin-top: 5px; }
+        .proof-link:hover { text-decoration: underline; }
+        .footer { position: absolute; bottom: 20mm; left: 20mm; right: 20mm; text-align: center; border-top: 1px solid #ccc; padding-top: 10px; font-size: 12px; color: #777; }
+        .print-btn { position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: #00ff88; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        @media print { body { background: white; padding: 0; } .page { box-shadow: none; width: 100%; height: auto; } .print-btn { display: none; } }
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="print-btn">🖨️ PRINT PDF</button>
+    <div class="page">
+        <div class="header"><h1>Activity Report</h1><p>DEPARTMENT OF COMPUTER SCIENCE & BUSINESS SYSTEMS</p><p>Participation & Achievement Record</p></div>
+        <div style="text-align: right; font-size: 12px; color: #555; margin-bottom: 20px;">Date Generated: <span id="genDate"></span></div>
+        <div class="section"><div class="label">Event Name</div><div class="value" id="r-name">Loading...</div></div>
+        <div class="section" style="display: flex; justify-content: space-between;"><div style="width: 48%;"><div class="label">Organizer</div><div class="value" id="r-org">-</div></div><div style="width: 48%;"><div class="label">Event Date</div><div class="value" id="r-date">-</div></div></div>
+        <div class="section"><div class="label">Participation Mode & Location</div><div class="value" id="r-mode">-</div></div>
+        <div class="section"><div class="label">Team Details</div><div class="value">Team Size: <span id="r-size">-</span><br><strong>Members:</strong> <span id="r-members">-</span></div></div>
+        <div class="section"><div class="label">Outcome / Status</div><div class="value"><span id="r-status" class="status-box">PARTICIPATED</span></div></div>
+        <div class="section"><div class="label">Digital Evidence</div><div class="value" id="links-container">No links provided.</div></div>
+        <div style="margin-top: 80px; display: flex; justify-content: space-between;"><div style="text-align: center;">_______________________<br><span style="font-size: 12px;">Student Signature</span></div><div style="text-align: center;">_______________________<br><span style="font-size: 12px;">HOD / Mentor Signature</span></div></div>
+        <div class="footer">Report generated via <strong>BitRise Tracker</strong> | A Student Activity Management System</div>
+    </div>
+    <script>
+        document.getElementById('genDate').innerText = new Date().toLocaleDateString();
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        const API_URL = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://localhost:5000/api/hackathons" : "https://hackathontracker.onrender.com/api/hackathons";
+        async function fetchReport() {
+            if(!id) { alert("No ID found!"); return; }
+            try {
+                const res = await fetch(`${API_URL}/${id}`); const data = await res.json();
+                document.getElementById('r-name').innerText = data.name; document.getElementById('r-org').innerText = data.organizer;
+                document.getElementById('r-date').innerText = `${data.startDate} to ${data.endDate}`; document.getElementById('r-mode').innerText = `${data.location} (${data.mode})`;
+                document.getElementById('r-size').innerText = data.teamSize; document.getElementById('r-members').innerText = data.teamMembers || "Not listed";
+                const statusElem = document.getElementById('r-status'); statusElem.innerText = data.currentStatus || "PARTICIPATED";
+                if(data.currentStatus === 'Winner') statusElem.style.background = "#FFD700"; else if(data.currentStatus === 'Rejected') statusElem.style.background = "#ff4444"; else statusElem.style.background = "#333";
+                let linksHTML = "";
+                if(data.certificate) linksHTML += `<a href="${data.certificate}" target="_blank" class="proof-link">🔗 View Certificate</a>`;
+                if(data.photos) linksHTML += `<a href="${data.photos}" target="_blank" class="proof-link">🔗 View Event Photos</a>`;
+                if(data.link) linksHTML += `<a href="${data.link}" target="_blank" class="proof-link">🔗 Event Website</a>`;
+                if(linksHTML) document.getElementById('links-container').innerHTML = linksHTML;
+            } catch(err) { document.body.innerHTML = "<h2 style='color:white; text-align:center;'>Error loading report. Check ID.</h2>"; }
+        }
+        fetchReport();
+    </script>
+</body>
+</html>
