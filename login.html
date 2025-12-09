@@ -1,72 +1,499 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Login - BitRise</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400&display=swap');
-        body { margin: 0; padding: 0; background-color: #050505; font-family: 'Poppins', sans-serif; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        
-        .container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            padding: 40px;
-            border-radius: 20px;
-            width: 300px;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.1);
-        }
-        
-        h2 { font-family: 'Orbitron', sans-serif; color: #00ff88; margin-bottom: 20px; text-shadow: 0 0 10px #00ff88; letter-spacing: 2px; }
-        
-        input {
-            background: #111; border: 1px solid #333; padding: 12px; border-radius: 8px; color: #fff; width: 100%; box-sizing: border-box; font-family: 'Poppins', sans-serif; text-align: center; margin-bottom: 15px; font-size: 16px;
-        }
-        input:focus { border-color: #00d4ff; outline: none; box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Team Login - BitRise</title>
 
-        button {
-            background: linear-gradient(45deg, #00ff88, #00d4ff); border: none; padding: 12px; width: 100%; font-weight: bold; font-family: 'Orbitron', sans-serif; cursor: pointer; border-radius: 8px; transition: 0.3s; color: #000;
-        }
-        button:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
-        #errorMsg { color: #ff4444; font-size: 12px; margin-top: 10px; display: none; }
-        
-        .back-link { margin-top: 15px; display: block; font-size: 12px; color: #888; text-decoration: none; }
-        .back-link:hover { color: #00d4ff; }
-    </style>
+  <style>
+    :root{
+      --bg:#050505;
+      --glass: rgba(255,255,255,0.05);
+      --accent1: #00ff88;
+      --accent2: #00d4ff;
+      --danger: #ff4444;
+      --muted: #888;
+    }
+
+    /* Page layout */
+    html,body{height:100%;margin:0;background:var(--bg);font-family:'Poppins',sans-serif;color:#fff;overflow:hidden}
+    .wrap{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;position:relative}
+
+    /* Particles canvas */
+    #bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:0.65;pointer-events:none}
+
+    /* Container */
+    .container{
+      position:relative;
+      z-index:3;
+      width:360px;
+      max-width:calc(100% - 40px);
+      text-align:center;
+      background:var(--glass);
+      backdrop-filter:blur(10px);
+      border-radius:18px;
+      padding:32px;
+      border:1px solid rgba(0,255,136,0.12);
+      box-shadow:0 8px 40px rgba(0,212,255,0.06);
+      transition:transform 400ms cubic-bezier(.2,.9,.3,1);
+    }
+    .container.enter{transform:scale(1.02)}
+
+    h2{font-family:'Orbitron',sans-serif;color:var(--accent1);margin:0 0 12px;text-shadow:0 0 8px rgba(0,255,136,0.12);letter-spacing:1.8px}
+    .greeting{font-size:13px;color:#bdeedd;margin-bottom:18px}
+
+    /* Input + eye */
+    .field{position:relative;margin-bottom:14px}
+    input[type="password"], input[type="text"]{
+      width:100%;padding:12px 44px 12px 14px;border-radius:10px;background:#0f0f0f;border:1px solid #242424;color:#fff;box-sizing:border-box;font-size:15px;text-align:center;transition:box-shadow 200ms, border-color 200ms
+    }
+    input:focus{outline:none;border-color:var(--accent2);box-shadow:0 0 10px rgba(0,212,255,0.14)}
+    .eye-btn{
+      position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#bbb;cursor:pointer;padding:6px;border-radius:6px;font-size:14px
+    }
+
+    /* Buttons */
+    .btn{
+      display:inline-block;width:100%;padding:12px;border-radius:10px;border:none;font-family:'Orbitron',sans-serif;font-weight:700;cursor:pointer;font-size:15px;
+      background:linear-gradient(45deg,var(--accent1),var(--accent2));color:#000;transition:transform 180ms,box-shadow 180ms;
+    }
+    .btn:active{transform:scale(0.99)}
+    .btn[disabled]{opacity:0.6;cursor:not-allowed;transform:none}
+
+    /* Small links and footer */
+    .links{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:13px}
+    .back-link{color:var(--muted);text-decoration:none}
+    .back-link:hover{color:var(--accent2)}
+    .footer{font-size:12px;color:#9aa;border-top:1px solid rgba(255,255,255,0.02);margin-top:16px;padding-top:12px;color:#9aa}
+
+    /* Error message */
+    #errorMsg{display:none;color:var(--danger);font-size:13px;margin-top:10px}
+
+    /* Lockout style */
+    .locked{border-color:rgba(255,68,68,0.2);box-shadow:0 0 18px rgba(255,68,68,0.06)}
+
+    /* Animated neon border */
+    .container::before{
+      content:"";position:absolute;inset:-2px;border-radius:20px;padding:2px;
+      background:linear-gradient(90deg, rgba(0,255,136,0.06), rgba(0,212,255,0.04));
+      z-index:-1;filter:blur(12px);opacity:0.7;transition:opacity 0.3s;
+    }
+    .container:hover::before{opacity:1}
+
+    /* Shake animation */
+    @keyframes shake {
+      0%{transform:translateX(0)}
+      20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)}
+      60%{transform:translateX(-6px)}
+      80%{transform:translateX(6px)}
+      100%{transform:translateX(0)}
+    }
+    .shake{animation:shake 550ms}
+
+    /* Loading overlay & fake terminal */
+    .overlay{
+      position:absolute;inset:0;background:linear-gradient(0deg,rgba(1,1,1,0.75),rgba(1,1,1,0.55));border-radius:18px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:20px;z-index:6;backdrop-filter: blur(4px);opacity:0;pointer-events:none;transition:opacity 220ms;
+    }
+    .overlay.show{opacity:1;pointer-events:auto}
+    .spinner{width:48px;height:48px;border-radius:50%;border:4px solid rgba(255,255,255,0.08);border-top-color:var(--accent2);animation:spin 900ms linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .terminal{
+      width:100%;max-width:320px;background:#060606;border-radius:8px;padding:12px;text-align:left;color:#bfeef8;font-family:monospace;font-size:12px;box-shadow:0 6px 28px rgba(0,0,0,0.6)
+    }
+    .terminal .line{opacity:0.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .terminal .success{color:#9fffbf}
+    .terminal .info{color:#bfeef8}
+    .terminal .danger{color:#ff9a9a}
+
+    /* Modal (Forgot code) */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:12}
+    .modal{background:#0c0c0c;padding:18px;border-radius:10px;width:360px;max-width:92%;border:1px solid rgba(255,255,255,0.03)}
+    .modal h3{margin:0 0 8px;font-family:'Orbitron',sans-serif;color:var(--accent2);font-size:16px}
+    .modal p{margin:0 0 12px;color:#bdbdbd;font-size:13px}
+    .modal .modal-actions{display:flex;justify-content:flex-end;gap:8px}
+
+    /* small hint text */
+    .hint{font-size:12px;color:#aab;margin-top:8px}
+
+    /* Responsive */
+    @media (max-width:420px){
+      .container{padding:20px}
+      .terminal{max-width:100%}
+    }
+
+  </style>
 </head>
 <body>
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
 
-    <div class="container">
-        <h2>TEAM ACCESS</h2>
-        <input type="password" id="passcode" placeholder="Enter Secret Code">
-        <button onclick="checkLogin()">UNLOCK SYSTEM 🔓</button>
-        <p id="errorMsg">⚠️ Access Denied! Wrong Code.</p>
+  <div class="wrap">
+    <div class="container" id="mainContainer">
+      <h2>TEAM ACCESS</h2>
+      <div class="greeting" id="greetingText">Welcome</div>
+
+      <div class="field">
+        <input id="passcode" type="password" placeholder="Enter Secret Code" aria-label="Secret Code">
+        <button class="eye-btn" id="toggleEye" title="Show/Hide code" aria-pressed="false">Show</button>
+      </div>
+
+      <button class="btn" id="unlockBtn">UNLOCK SYSTEM</button>
+
+      <div id="errorMsg" role="status" aria-live="polite">Access Denied. Wrong code.</div>
+
+      <div class="links">
         <a href="dashboard.html" class="back-link">Just view the list →</a>
+        <a href="#" id="forgotLink" class="back-link">Forgot code?</a>
+      </div>
+
+      <div class="footer">
+        BitRise Internal Access System • 2025
+        <div class="hint">This portal is restricted to authorized team members only.</div>
+      </div>
+
+      <!-- Overlay for loading / fake scan / terminal -->
+      <div class="overlay" id="overlay">
+        <div class="spinner" id="spinner" aria-hidden="true"></div>
+        <div class="terminal" id="terminal" aria-hidden="true" style="display:none"></div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        function checkLogin() {
-            const code = document.getElementById('passcode').value;
-            const error = document.getElementById('errorMsg');
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <h3>Need help accessing?</h3>
+      <p>If you forgot the code, contact your team lead to regenerate access. For security, codes are not recoverable from the client. You can request a reset link or temporary code.</p>
+      <div class="modal-actions">
+        <button id="modalClose" class="btn" style="width:auto;padding:8px 12px;font-weight:600">Close</button>
+      </div>
+    </div>
+  </div>
 
-            // 🔐 SECRET PASSWORD (Change if you want)
-            const SECRET = "BitRise2025"; 
+  <script>
 
-            if (code === SECRET) {
-                localStorage.setItem("isTeamMember", "true"); // Save access
-                window.location.href = "index.html"; // Go to Form
-            } else {
-                error.style.display = "block";
-            }
+    (function(){
+      const SECRET_FALLBACK = "BitRise2025"; // fallback: only used if server validation isn't available
+      const MAX_ATTEMPTS = 3;
+      const LOCK_DURATION_MS = 30 * 1000; // 30 seconds lockout
+      const overlay = document.getElementById('overlay');
+      const terminal = document.getElementById('terminal');
+      const spinner = document.getElementById('spinner');
+      const passInput = document.getElementById('passcode');
+      const unlockBtn = document.getElementById('unlockBtn');
+      const errorMsg = document.getElementById('errorMsg');
+      const container = document.getElementById('mainContainer');
+      const greetingText = document.getElementById('greetingText');
+      const modalBackdrop = document.getElementById('modalBackdrop');
+
+      let attempts = Number(localStorage.getItem('loginAttempts') || 0);
+      let lockUntil = Number(localStorage.getItem('lockUntil') || 0);
+      let isLocked = Date.now() < lockUntil;
+
+      // greeting
+      function updateGreeting(){
+        const now = new Date();
+        const h = now.getHours();
+        let g = 'Welcome';
+        if(h < 5) g = 'Good night, Operator';
+        else if(h < 12) g = 'Good morning';
+        else if(h < 17) g = 'Good afternoon';
+        else g = 'Good evening';
+        greetingText.textContent = g;
+      }
+      updateGreeting();
+
+      // visual enter
+      requestAnimationFrame(()=>container.classList.add('enter'));
+
+      // show error
+      function showError(text){
+        errorMsg.textContent = text || 'Access Denied. Wrong code.';
+        errorMsg.style.display = 'block';
+        passInput.classList.add('shake');
+        setTimeout(()=>passInput.classList.remove('shake'), 600);
+      }
+
+      // lockout
+      function setLock(durationMs){
+        lockUntil = Date.now() + durationMs;
+        localStorage.setItem('lockUntil', String(lockUntil));
+        isLocked = true;
+        unlockBtn.disabled = true;
+        container.classList.add('locked');
+        showError(`System temporarily locked. Try again in ${Math.ceil(durationMs/1000)}s.`);
+        // countdown update
+        const timer = setInterval(()=>{
+          const remain = lockUntil - Date.now();
+          if(remain <= 0){
+            clearInterval(timer);
+            isLocked = false;
+            attempts = 0;
+            localStorage.setItem('loginAttempts', String(attempts));
+            localStorage.removeItem('lockUntil');
+            unlockBtn.disabled = false;
+            container.classList.remove('locked');
+            errorMsg.style.display = 'none';
+          } else {
+            showError(`System temporarily locked. Try again in ${Math.ceil(remain/1000)}s.`);
+          }
+        }, 1000);
+      }
+
+      if(isLocked) {
+        // re-enable/keep locked until expiry
+        setLock(lockUntil - Date.now());
+      }
+
+      // Toggle show/hide
+      const toggle = document.getElementById('toggleEye');
+      toggle.addEventListener('click', ()=>{
+        const isPwd = passInput.type === 'password';
+        passInput.type = isPwd ? 'text' : 'password';
+        toggle.textContent = isPwd ? 'Hide' : 'Show';
+        toggle.setAttribute('aria-pressed', String(isPwd));
+        passInput.focus();
+      });
+
+      // overlay + fake terminal sequence
+      async function showVerificationSequence(logLines = []) {
+        overlay.classList.add('show');
+        spinner.style.display = 'block';
+        terminal.style.display = 'none';
+        terminal.innerHTML = '';
+        await wait(600);
+
+        // show terminal
+        spinner.style.display = 'none';
+        terminal.style.display = 'block';
+        overlay.setAttribute('aria-hidden','false');
+
+        // type each log line
+        for(const line of logLines){
+          appendTerminalLine(line.text, line.cls || 'info');
+          await wait(line.delay || 700);
         }
-        
-        // Enter key support
-        document.getElementById("passcode").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") checkLogin();
+      }
+
+      function appendTerminalLine(text, cls){
+        const div = document.createElement('div');
+        div.className = 'line ' + cls;
+        div.textContent = text;
+        terminal.appendChild(div);
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+
+      // small wait
+      function wait(ms){ return new Promise(res => setTimeout(res, ms)); }
+
+      // Attempt validation: try server endpoint first, fallback to local secret
+      async function validateCodeRemote(code) {
+        // Try calling a validation endpoint. If your backend exists, replace '/api/validate' with your route.
+        // Expected: POST {code} -> { ok: true } (JSON)
+        try {
+          const resp = await fetch('/api/validate', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({code}),
+            cache: 'no-store',
+          });
+          if(!resp.ok) throw new Error('network');
+          const json = await resp.json();
+          // Expect shape { ok: boolean, message?: string }
+          return {valid: Boolean(json.ok), reason: json.message || null, usedServer:true};
+        } catch (err) {
+          // server not available or failed; use client fallback
+          console.warn('Server validate failed, using client fallback. For real security, validate on server.');
+          return {valid: code === SECRET_FALLBACK, reason: null, usedServer:false};
+        }
+      }
+
+      // Main login flow
+      async function checkLogin(){
+        if(isLocked) {
+          showError('System locked. Wait for timeout.');
+          return;
+        }
+        const code = passInput.value.trim();
+        if(!code){
+          showError('Please enter the secret code.');
+          return;
+        }
+
+        // disable UI
+        unlockBtn.disabled = true;
+        passInput.disabled = true;
+        errorMsg.style.display = 'none';
+
+        // show fake scan & verification UI
+        await showVerificationSequence([
+          {text:'Initializing secure channel...', delay:700},
+          {text:'Scanning credentials...', delay:800},
+          {text:'Verifying member identity...', delay:900},
+        ]);
+
+        // call validation (server preferred)
+        const remoteResult = await validateCodeRemote(code);
+
+        // show result lines
+        if(remoteResult.usedServer){
+          appendTerminalLine('AUTH: Server validation completed', 'info');
+        } else {
+          appendTerminalLine('AUTH: Server unreachable — using local fallback', 'danger');
+        }
+
+        await wait(600);
+
+        if(remoteResult.valid){
+          appendTerminalLine('AUTH_SUCCESS: Credentials verified', 'success');
+          appendTerminalLine('Loading dashboard modules...', 'info');
+          await wait(800);
+          appendTerminalLine('Redirecting...', 'info');
+          // Save access & redirect
+          localStorage.setItem('isTeamMember','true');
+          // short delay so user sees the terminal
+          await wait(700);
+          // perform redirect
+          window.location.href = 'index.html';
+        } else {
+          appendTerminalLine('AUTH_FAILURE: Credentials invalid', 'danger');
+          attempts++;
+          localStorage.setItem('loginAttempts', String(attempts));
+          // if exceeded attempts -> lock
+          if(attempts >= MAX_ATTEMPTS){
+            appendTerminalLine(`Maximum attempts reached. Locking for ${Math.ceil(LOCK_DURATION_MS/1000)}s`, 'danger');
+            await wait(500);
+            setLock(LOCK_DURATION_MS);
+          } else {
+            showError('Access Denied. Wrong code.');
+          }
+          // close overlay after a moment
+          await wait(900);
+          overlay.classList.remove('show');
+          overlay.setAttribute('aria-hidden','true');
+          terminal.style.display = 'none';
+          unlockBtn.disabled = false;
+          passInput.disabled = false;
+          passInput.focus();
+        }
+      }
+
+      // Hook up button & enter key
+      unlockBtn.addEventListener('click', checkLogin);
+      passInput.addEventListener('keypress', (e)=>{
+        if(e.key === 'Enter') checkLogin();
+      });
+
+      // keyboard shortcuts
+      document.addEventListener('keydown', (e)=>{
+        // Esc clears input
+        if(e.key === 'Escape'){
+          passInput.value = '';
+          errorMsg.style.display = 'none';
+        }
+        // Ctrl+R or Cmd+R reset attempts (UX-only)
+        if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r'){
+          e.preventDefault();
+          attempts = 0;
+          localStorage.setItem('loginAttempts', String(attempts));
+          localStorage.removeItem('lockUntil');
+          isLocked = false;
+          unlockBtn.disabled = false;
+          container.classList.remove('locked');
+          errorMsg.style.display = 'none';
+        }
+      });
+
+      // modal
+      const forgotLink = document.getElementById('forgotLink');
+      const modalClose = document.getElementById('modalClose');
+      forgotLink.addEventListener('click', (e)=>{
+        e.preventDefault();
+        modalBackdrop.style.display = 'flex';
+        modalBackdrop.setAttribute('aria-hidden','false');
+      });
+      modalClose.addEventListener('click', ()=>{
+        modalBackdrop.style.display = 'none';
+        modalBackdrop.setAttribute('aria-hidden','true');
+      });
+      modalBackdrop.addEventListener('click', (ev)=>{
+        if(ev.target === modalBackdrop) {
+          modalBackdrop.style.display = 'none';
+          modalBackdrop.setAttribute('aria-hidden','true');
+        }
+      });
+
+      // Minimal accessibility: focus first input on load
+      passInput.focus();
+
+      // Visual/UX helpers: hide error when typing
+      passInput.addEventListener('input', ()=>{ errorMsg.style.display = 'none' });
+
+      // === Particles background ===
+      (function particles(){
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let w=0,h=0, particles=[];
+        function resize(){
+          const dpr = window.devicePixelRatio || 1;
+          w = canvas.width = Math.max(1, innerWidth * dpr);
+          h = canvas.height = Math.max(1, innerHeight * dpr);
+          canvas.style.width = innerWidth + 'px';
+          canvas.style.height = innerHeight + 'px';
+          ctx.scale(dpr,dpr);
+        }
+        function rand(min,max){return Math.random()*(max-min)+min}
+        function create(){
+          particles = [];
+          const count = Math.round((innerWidth * innerHeight) / 60000) + 18;
+          for(let i=0;i<count;i++){
+            particles.push({
+              x: rand(0,innerWidth),
+              y: rand(0,innerHeight),
+              r: rand(0.6,2.6),
+              vx: rand(-0.2,0.2),
+              vy: rand(-0.15,0.2),
+              glow: rand(0.2,0.95)
+            });
+          }
+        }
+        function draw(){
+          ctx.clearRect(0,0,innerWidth,innerHeight);
+          for(const p of particles){
+            p.x += p.vx;
+            p.y += p.vy;
+            if(p.x < -10) p.x = innerWidth + 10;
+            if(p.x > innerWidth + 10) p.x = -10;
+            if(p.y < -10) p.y = innerHeight + 10;
+            if(p.y > innerHeight + 10) p.y = -10;
+
+            // glow
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(0,255,170,${0.06 * p.glow})`;
+            ctx.arc(p.x, p.y, p.r*6, 0, Math.PI*2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(255,255,255,${0.08 * p.glow})`;
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            ctx.fill();
+          }
+          requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize', ()=>{
+          resize(); create();
         });
-    </script>
+        resize(); create(); draw();
+      })();
+
+      // small analytics: console note
+      console.log('Enhanced Team Login loaded. Reminder: move validation to server for production.');
+
+    })();
+  </script>
 </body>
 </html>
