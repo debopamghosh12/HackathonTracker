@@ -28,6 +28,7 @@ const HackathonSchema = new mongoose.Schema({
     endDate: String,
     teamSize: Number,
     teamCode: String,
+    currentStatus: String,
     teamMembers: String, 
     link: String
 });

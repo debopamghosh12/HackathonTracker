@@ -41,7 +41,7 @@
             text-shadow: 0 0 10px #00ff88; 
         }
 
-        
+        /* --- 2. FORM STYLING --- */
         form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .full-width { grid-column: span 2; }
         
@@ -62,16 +62,14 @@
             box-shadow: 0 0 10px rgba(0, 212, 255, 0.2); 
         }
 
-        
+        /* --- 3. DYNAMIC MEMBER INPUTS --- */
         .members-grid { 
             display: grid; grid-template-columns: 1fr 1fr; 
             gap: 10px; margin-top: 10px; 
         }
-        .member-input { 
-            border-color: #444; background: #0a0a0a; 
-        }
+        .member-input { border-color: #444; background: #0a0a0a; }
 
-        
+        /* --- 4. BUTTONS --- */
         button { 
             background: linear-gradient(45deg, #00ff88, #00d4ff); 
             border: none; padding: 15px; font-weight: bold; 
@@ -80,9 +78,7 @@
         }
         button:hover { transform: scale(1.02); }
 
-        .view-btn { 
-            background: transparent; border: 2px solid #00d4ff; color: #00d4ff; 
-        }
+        .view-btn { background: transparent; border: 2px solid #00d4ff; color: #00d4ff; }
         .view-btn:hover { background: #00d4ff; color: #000; }
 
         .logout-btn { 
@@ -103,14 +99,20 @@
     <div class="container">
         <h2>ADD NEW HACKATHON</h2>
         <form id="hackForm">
+            
             <div class="full-width">
-                <label>Hackathon Name</label><input type="text" id="name" required>
+                <label>Hackathon Name</label>
+                <input type="text" id="name" required>
             </div>
             <div class="full-width">
-                <label>Organizer Name</label><input type="text" id="organizer" required>
+                <label>Organizer Name</label>
+                <input type="text" id="organizer" required>
             </div>
             
-            <div><label>Location</label><input type="text" id="location" required></div>
+            <div>
+                <label>Location</label>
+                <input type="text" id="location" required>
+            </div>
             <div>
                 <label>Mode</label>
                 <select id="mode">
@@ -120,16 +122,15 @@
                 </select>
             </div>
             
-            <div><label>Start Date</label><input type="date" id="startDate" required></div>
-            <div><label>End Date</label><input type="date" id="endDate" required></div>
-            
             <div>
-                <label>PPT Needed? 📊</label>
-                <select id="pptNeeded">
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                </select>
+                <label>Start Date</label>
+                <input type="date" id="startDate" required>
             </div>
+            <div>
+                <label>End Date</label>
+                <input type="date" id="endDate" required>
+            </div>
+            
             <div>
                 <label>Registered? ✅</label>
                 <select id="registered">
@@ -137,12 +138,22 @@
                     <option value="No">No</option>
                 </select>
             </div>
+            <div>
+                <label>PPT Needed? 📊</label>
+                <select id="pptNeeded">
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
 
             <div>
-                <label>Team Size (Total Slots)</label>
+                <label>Team Size (Slots)</label>
                 <input type="number" id="teamSize" placeholder="e.g. 4" oninput="generateMemberInputs()" required>
             </div>
-            <div><label>Team Code</label><input type="text" id="teamCode"></div>
+            <div>
+                <label>Team Code</label>
+                <input type="text" id="teamCode">
+            </div>
 
             <div class="full-width" id="dynamic-area" style="display:none;">
                 <label>Enter Member Names:</label>
@@ -150,7 +161,8 @@
             </div>
             
             <div class="full-width">
-                <label>Registration Link</label><input type="url" id="link" required>
+                <label>Registration Link</label>
+                <input type="url" id="link" required>
             </div>
             
             <button class="full-width" type="submit">Save To Hack 💾</button>
@@ -162,12 +174,12 @@
     <div class="footer">Made by <span>BitRise</span> 🚀</div>
 
     <script>
-        // 🪄 MAGIC URL SWITCHER
+        // 🪄 MAGIC URL SWITCHER (Auto-detect Local vs Live)
         const API_URL = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") 
             ? "http://localhost:5000/api/hackathons"
             : "https://hackathontracker.onrender.com/api/hackathons";
 
-        // FUNCTION: Create input boxes based on size
+        // FUNCTION: Create input boxes based on team size
         function generateMemberInputs() {
             const size = document.getElementById('teamSize').value;
             const container = document.getElementById('members-container');
@@ -190,18 +202,19 @@
             }
         }
 
+        // FORM SUBMIT LOGIC
         const form = document.getElementById('hackForm');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Gather all member names from dynamic boxes
+            // Collect member names from dynamic inputs
             let membersArray = [];
             const size = document.getElementById('teamSize').value;
             for(let i=1; i<=size; i++) {
                 const val = document.getElementById(`member-${i}`).value;
                 if(val.trim() !== "") membersArray.push(val.trim());
             }
-            const membersString = membersArray.join(", "); // Convert array to string
+            const membersString = membersArray.join(", ");
 
             const btn = form.querySelector('button[type="submit"]'); 
             btn.innerText = "Saving...";
@@ -213,10 +226,14 @@
                 mode: document.getElementById('mode').value,
                 startDate: document.getElementById('startDate').value,
                 endDate: document.getElementById('endDate').value,
-                pptNeeded: document.getElementById('pptNeeded').value,
-                registered: document.getElementById('registered').value,
+                pptNeeded: document.getElementById('pptNeeded').value, 
+                
+                // Status Logic
+                registered: document.getElementById('registered').value, // User Selects Yes/No
+                currentStatus: "Interested", // 👈 AUTO-SET TO INTERESTED (Hidden)
+                
                 teamSize: document.getElementById('teamSize').value,
-                teamMembers: membersString, // 👈 Sending names here
+                teamMembers: membersString,
                 teamCode: document.getElementById('teamCode').value,
                 link: document.getElementById('link').value
             };
@@ -227,7 +244,7 @@
                     headers: { "Content-Type": "application/json" }, 
                     body: JSON.stringify(formData) 
                 }); 
-                window.location.href = "dashboard.html"; 
+                window.location.href = "dashboard.html"; // Redirect on success
             } 
             catch (err) { 
                 alert("Error saving data!"); 
@@ -235,6 +252,7 @@
             }
         });
 
+        // LOGOUT LOGIC
         function logout() { 
             localStorage.removeItem("isTeamMember"); 
             window.location.href = "login.html"; 
