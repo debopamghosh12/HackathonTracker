@@ -175,9 +175,7 @@
   </div>
 
   <script>
-    // ==========================================
-    //  PART 1: THREE.JS BACKGROUND (The "Flow")
-    // ==========================================
+
     const initThreeJS = () => {
         const canvas = document.getElementById('bgCanvas');
         const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
@@ -266,15 +264,12 @@
         animate();
     };
 
-    // ==========================================
-    //  PART 2: LOGIC, SECURITY & UI
-    // ==========================================
     (function(){
         
         // --- SECURITY: SHA-256 HASH ---
         // The password is "BitRise2025"
         // But we ONLY store the hash. 
-        // Hash: 38d18476f57398150d0325d22221055734316c0240d9d682462372565551390f
+        // Hash: 3de2c229f6e67706f418ce0850b1702bad11539f46a26d9e6d632f5ef59dd736
         const TARGET_HASH = "3de2c229f6e67706f418ce0850b1702bad11539f46a26d9e6d632f5ef59dd736";
         
         async function hashString(message) {
@@ -359,7 +354,7 @@
                 await typeText('> Redirecting to Mainframe...', 'info');
                 
                 // Success - Redirect
-                localStorage.setItem('bitrise_auth', 'true');
+                localStorage.setItem('isTeamMember', 'true');
                 setTimeout(() => {
                     window.location.href = 'dashboard.html'; 
                 }, 1000);

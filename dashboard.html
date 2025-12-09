@@ -109,7 +109,7 @@
         const isLoggedIn = localStorage.getItem("isTeamMember") === "true";
         let allHackathons = [];
 
-        function goToAdd() { if (isLoggedIn) window.location.href = "index.html"; else window.location.href = "login.html"; }
+        function goToAdd() { window.location.href = "index.html"; }
         function logout() { localStorage.removeItem("isTeamMember"); window.location.href = "login.html"; }
 
         function triggerConfetti() {
