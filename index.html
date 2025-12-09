@@ -190,8 +190,12 @@
     </div>
 
     <script>
-        const API_URL = "https://hackathontracker.onrender.com/";
+    
+        const API_URL = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") 
+            ? "http://localhost:5000/api/hackathons"  // Local hole eta nebe
+            : "https://hackathontracker.onrender.com/api/hackathons"; // Live hole eta nebe
         const form = document.getElementById('hackForm');
+        // 👇 MAGIC CODE: Automatic URL Selection
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
