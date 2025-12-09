@@ -4,114 +4,139 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Hackathon - Hack Tracker</title>
+    
+    <script>
+        // 🔒 SECURITY CHECK (Login chara dhuka jabe na)
+        if (localStorage.getItem("isTeamMember") !== "true") {
+            window.location.href = "login.html";
+        }
+    </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
 
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: #050505;
-            font-family: 'Poppins', sans-serif;
-            color: #fff;
-            display: flex;
-            flex-direction: column; /* Changed to column for footer */
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #050505; 
+            font-family: 'Poppins', sans-serif; 
+            color: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
         }
 
-        .container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            padding: 40px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 700px;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+        .container { 
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(0, 255, 136, 0.2); 
+            padding: 40px; 
+            border-radius: 20px; 
+            width: 100%; 
+            max-width: 700px; 
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.1); 
         }
 
-        h2 {
+        h2 { 
+            font-family: 'Orbitron', sans-serif; 
+            color: #00ff88; 
+            text-align: center; 
+            margin-bottom: 30px; 
+            text-shadow: 0 0 10px #00ff88; 
+        }
+
+        label { 
+            display: block; 
+            font-size: 14px; 
+            color: #00ff88; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+        }
+
+        form { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+        }
+
+        .full-width { 
+            grid-column: span 2; 
+        }
+
+        input, select { 
+            background: #111; 
+            border: 1px solid #333; 
+            padding: 15px; 
+            border-radius: 10px; 
+            color: #fff; 
+            width: 100%; 
+            box-sizing: border-box; 
+            font-family: 'Poppins', sans-serif; 
+        }
+
+        input:focus, select:focus { 
+            border-color: #00d4ff; 
+            outline: none; 
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2); 
+        }
+
+        button { 
+            background: linear-gradient(45deg, #00ff88, #00d4ff); 
+            border: none; 
+            padding: 15px; 
+            font-weight: bold; 
+            font-family: 'Orbitron', sans-serif; 
+            cursor: pointer; 
+            border-radius: 10px; 
+            margin-top: 10px; 
+            transition: 0.3s; 
+            color: #000; 
+        }
+
+        button:hover { 
+            transform: scale(1.02); 
+        }
+
+        .view-btn { 
+            background: transparent; 
+            border: 2px solid #00d4ff; 
+            color: #00d4ff; 
+        }
+
+        .view-btn:hover { 
+            background: #00d4ff; 
+            color: #000; 
+        }
+
+        .logout-btn { 
+            background: #ff4444; 
+            color: white; 
+            margin-top: 20px; 
+            padding: 10px 20px; 
+            font-size: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
             font-family: 'Orbitron', sans-serif;
-            color: #00ff88;
-            text-align: center;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px #00ff88;
         }
 
-        /* Better Label Visibility */
-        label {
-            display: block;
-            font-size: 14px;
-            color: #00ff88; /* Neon Green Label for visibility */
-            margin-bottom: 8px;
-            font-weight: 600;
+        .logout-btn:hover { 
+            background: #cc0000; 
         }
 
-        form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        .footer { 
+            margin-top: 30px; 
+            font-size: 14px; 
+            color: #888; 
+            font-family: 'Orbitron', sans-serif; 
         }
 
-        .full-width { grid-column: span 2; }
-
-        input, select {
-            background: #111;
-            border: 1px solid #333;
-            padding: 15px;
-            border-radius: 10px;
-            color: #fff;
-            width: 100%;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-            font-size: 14px;
+        .footer span { 
+            color: #00ff88; 
+            font-weight: bold; 
         }
-
-        input:focus, select:focus {
-            border-color: #00d4ff;
-            outline: none;
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
-        }
-
-        button {
-            background: linear-gradient(45deg, #00ff88, #00d4ff);
-            border: none;
-            padding: 15px;
-            font-weight: bold;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 10px;
-            transition: 0.3s;
-            margin-top: 10px;
-        }
-
-        button:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
-        
-        /* Secondary Button (View List) */
-        .view-btn {
-            background: transparent;
-            border: 2px solid #00d4ff;
-            color: #00d4ff;
-            margin-top: 0;
-        }
-        .view-btn:hover { background: #00d4ff; color: #000; }
-
-        /* --- NEW FOOTER STYLE --- */
-        .footer {
-            margin-top: 30px;
-            font-size: 14px;
-            color: #888;
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 1px;
-        }
-        .footer span {
-            color: #00ff88;
-            font-weight: bold;
-            text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
-        }
-        
     </style>
 </head>
 <body>
@@ -121,17 +146,16 @@
         <form id="hackForm">
             <div class="full-width">
                 <label>Hackathon Name</label>
-                <input type="text" id="name" placeholder="Enter name..." required>
+                <input type="text" id="name" required>
             </div>
-
             <div class="full-width">
                 <label>Organizer Name</label>
-                <input type="text" id="organizer" placeholder="Who is organizing?" required>
+                <input type="text" id="organizer" required>
             </div>
             
             <div>
                 <label>Location</label>
-                <input type="text" id="location" placeholder="City / College" required>
+                <input type="text" id="location" required>
             </div>
             <div>
                 <label>Mode</label>
@@ -168,35 +192,35 @@
 
             <div>
                 <label>Team Size</label>
-                <input type="number" id="teamSize" placeholder="e.g. 4" required>
+                <input type="number" id="teamSize" required>
             </div>
             <div>
                 <label>Team Code</label>
-                <input type="text" id="teamCode" placeholder="Optional">
+                <input type="text" id="teamCode">
             </div>
             
             <div class="full-width">
                 <label>Registration Link</label>
-                <input type="url" id="link" placeholder="https://..." required>
+                <input type="url" id="link" required>
             </div>
             
             <button class="full-width" type="submit">Save To Hack 💾</button>
             <button class="full-width view-btn" type="button" onclick="window.location.href='dashboard.html'">VIEW SAVED LIST 📋</button>
         </form>
     </div>
-
-    <div class="footer">
-        Made by <span>BitRise</span> 🚀
-    </div>
+    
+    <button onclick="logout()" class="logout-btn">LOGOUT 🔒</button>
+    <div class="footer">Made by <span>BitRise</span> 🚀</div>
 
     <script>
-    
+        // 🪄 MAGIC URL SWITCHER (Local vs Live Check)
         const API_URL = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") 
-            ? "http://localhost:5000/api/hackathons"  // Local hole eta nebe
-            : "https://hackathontracker.onrender.com/api/hackathons"; // Live hole eta nebe
-        const form = document.getElementById('hackForm');
-        // 👇 MAGIC CODE: Automatic URL Selection
+            ? "http://localhost:5000/api/hackathons"
+            : "https://hackathontracker.onrender.com/api/hackathons";
 
+        const form = document.getElementById('hackForm');
+
+        // Form Submit Logic
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = form.querySelector('button[type="submit"]');
@@ -222,14 +246,18 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(formData)
                 });
-                // Redirecting to the list page after save
-                window.location.href = "dashboard.html";
+                window.location.href = "dashboard.html"; // Go to Dashboard
             } catch (err) {
-                alert("Error saving data!");
+                alert("Error! Check console.");
                 btn.innerText = "Error ❌";
             }
         });
-    </script>
 
+        // Logout Logic
+        function logout() {
+            localStorage.removeItem("isTeamMember");
+            window.location.href = "login.html";
+        }
+    </script>
 </body>
 </html>

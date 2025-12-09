@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Login - BitRise</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400&display=swap');
+        body { margin: 0; padding: 0; background-color: #050505; font-family: 'Poppins', sans-serif; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            padding: 40px;
+            border-radius: 20px;
+            width: 300px;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.1);
+        }
+        
+        h2 { font-family: 'Orbitron', sans-serif; color: #00ff88; margin-bottom: 20px; text-shadow: 0 0 10px #00ff88; letter-spacing: 2px; }
+        
+        input {
+            background: #111; border: 1px solid #333; padding: 12px; border-radius: 8px; color: #fff; width: 100%; box-sizing: border-box; font-family: 'Poppins', sans-serif; text-align: center; margin-bottom: 15px; font-size: 16px;
+        }
+        input:focus { border-color: #00d4ff; outline: none; box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+
+        button {
+            background: linear-gradient(45deg, #00ff88, #00d4ff); border: none; padding: 12px; width: 100%; font-weight: bold; font-family: 'Orbitron', sans-serif; cursor: pointer; border-radius: 8px; transition: 0.3s; color: #000;
+        }
+        button:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
+
+        #errorMsg { color: #ff4444; font-size: 12px; margin-top: 10px; display: none; }
+        
+        .back-link { margin-top: 15px; display: block; font-size: 12px; color: #888; text-decoration: none; }
+        .back-link:hover { color: #00d4ff; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>TEAM ACCESS</h2>
+        <input type="password" id="passcode" placeholder="Enter Secret Code">
+        <button onclick="checkLogin()">UNLOCK SYSTEM 🔓</button>
+        <p id="errorMsg">⚠️ Access Denied! Wrong Code.</p>
+        <a href="dashboard.html" class="back-link">Just view the list →</a>
+    </div>
+
+    <script>
+        function checkLogin() {
+            const code = document.getElementById('passcode').value;
+            const error = document.getElementById('errorMsg');
+
+            // 🔐 SECRET PASSWORD (Change if you want)
+            const SECRET = "BitRise2025"; 
+
+            if (code === SECRET) {
+                localStorage.setItem("isTeamMember", "true"); // Save access
+                window.location.href = "index.html"; // Go to Form
+            } else {
+                error.style.display = "block";
+            }
+        }
+        
+        // Enter key support
+        document.getElementById("passcode").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") checkLogin();
+        });
+    </script>
+</body>
+</html>
