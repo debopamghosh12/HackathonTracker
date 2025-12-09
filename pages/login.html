@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Team Login - BitRise</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/login.css">
+</head>
+<body>
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+  <div class="wrap">
+    <div class="container" id="mainContainer">
+      <h2>TEAM ACCESS</h2>
+      <div class="greeting" id="greetingText">Welcome</div>
+
+      <div class="field">
+        <input id="passcode" type="password" placeholder="Enter Secret Code" aria-label="Secret Code">
+        <button class="eye-btn" id="toggleEye" title="Show/Hide code" aria-pressed="false">Show</button>
+      </div>
+
+      <button class="btn" id="unlockBtn">UNLOCK SYSTEM</button>
+
+      <div id="errorMsg" role="status" aria-live="polite">Access Denied. Wrong code.</div>
+
+      <div class="links">
+        <a href="dashboard.html" class="back-link">Just view the list →</a>
+        <a href="#" id="forgotLink" class="back-link">Forgot code?</a>
+      </div>
+
+      <div class="footer">
+        BitRise Internal Access System • 2025
+        <div class="hint">This portal is restricted to authorized team members only.</div>
+      </div>
+
+      <!-- Overlay for loading / fake scan / terminal -->
+      <div class="overlay" id="overlay">
+        <div class="spinner" id="spinner" aria-hidden="true"></div>
+        <div class="terminal" id="terminal" aria-hidden="true" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <h3>Need help accessing?</h3>
+      <p>If you forgot the code, contact your team lead to regenerate access. For security, codes are not recoverable from the client. You can request a reset link or temporary code.</p>
+      <div class="modal-actions">
+        <button id="modalClose" class="btn" style="width:auto;padding:8px 12px;font-weight:600">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/login.js" defer></script>
+</body>
+</html>
