@@ -65,6 +65,7 @@
             transition: 0.4s;
             position: relative;
             overflow: hidden;
+            opacity: 0;
         }
 
         /* CARD HOVER */
@@ -99,7 +100,12 @@
         .footer { margin-top: 50px; font-size: 14px; color: #888; font-family: 'Orbitron', sans-serif; background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 20px; }
         .footer span { color: #00ff88; font-weight: bold; }
 
-        /* FLOATING ACTION BUTTON */
+        /* SCROLL ANIMATIONS */
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .card-observe { opacity: 0; }
+        .card-observe.show { animation: slideInUp 0.7s ease forwards; }
+
         .fab-container { position: fixed; bottom: 30px; right: 30px; z-index: 999; }
         .fab-main { width: 60px; height: 60px; background: linear-gradient(135deg, #00d4ff, #00ff88); border: 2px solid #00d4ff; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #000; font-size: 24px; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 0 20px #00d4ff; }
         .fab-main:hover { transform: scale(1.1); box-shadow: 0 0 30px #00d4ff; }
@@ -124,7 +130,7 @@
 
         <div class="team-container">
             
-            <div class="member-card">
+            <div class="member-card card-observe">
                 <img src="assets/Debopam_Image.jpg" alt="Profile" class="profile-pic">
                 <div class="name">Debopam Ghosh</div>
                 <span class="role">Backend Systems and Machine Learning</span>
@@ -136,7 +142,7 @@
                 </div>
             </div>
 
-            <div class="member-card">
+            <div class="member-card card-observe">
                 <img src="assets/Rajdeep_image.jpg" alt="Profile" class="profile-pic">
                 <div class="name">Rajdeep Saha</div>
                 <span class="role">Python Developer and CyberSecurity Expert</span>
@@ -148,7 +154,7 @@
                 </div>
             </div>
 
-            <div class="member-card">
+            <div class="member-card card-observe">
                 <img src="assets/harsh.jpg" alt="Profile" class="profile-pic">
                 <div class="name">Harsvardhan Rajgarhia</div>
                 <span class="role">Backend Ninja</span>
@@ -282,6 +288,28 @@
                 fabMain.classList.remove('active');
                 fabMenu.classList.remove('show');
             }
+        });
+
+        // Scroll animations with Intersection Observer
+        const cards = document.querySelectorAll('.member-card');
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('card-observe');
+                        entry.target.classList.add('show');
+                    }, index * 100);
+                }
+            });
+        }, observerOptions);
+
+        cards.forEach(card => {
+            cardObserver.observe(card);
         });
     </script>
 
