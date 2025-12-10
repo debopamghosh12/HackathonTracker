@@ -6,6 +6,8 @@
     <title>Dashboard - Hack Tracker</title>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="assets/js/sessionManager.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
@@ -219,18 +221,40 @@
                 padding: 10px 14px; font-size: 13px;
             }
         }
+        /* --- WARP ENTRY TRANSITION --- */
+        #warp-entry-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgb(0, 0, 0); /* Matches the login flash */
+            z-index: 9999;
+            pointer-events: none;
+            transition: opacity 1.2s ease-out; /* Slow fade out */
+        }
+
+        /* Initial state of the body content (Before landing) */
+        body {
+            /* Existing styles... */
+            opacity: 0; /* Hide initially */
+            transform: scale(1.05); /* Slight Zoom In */
+            transition: opacity 0.8s ease-out, transform 1.2s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        /* Active state (After landing) */
+        body.loaded {
+            opacity: 1;
+            transform: scale(1); /* Zoom back to normal */
+        }
     </style>
 </head>
 <body>
-
+    <div id="warp-entry-overlay"></div>
     <canvas id="bg-canvas"></canvas>
 
     <div class="navbar">
         <div class="nav-left">
-            <a href="javascript:void(0)" onclick="goToAdd()" class="nav-btn">➕ ADD EVENT</a>
-            <a href="team.html" class="team-btn">👥 TEAM</a>
+            <a href="javascript:void(0)" onclick="goToAdd()" class="nav-btn"><i class="fas fa-plus"></i> ADD EVENT</a>
+            <a href="team.html" class="team-btn"><i class="fas fa-users"></i> TEAM</a>
         </div>
-        <button onclick="logout()" class="auth-btn">LOGOUT 🔒</button>
+        <button onclick="logout()" class="auth-btn"><i class="fas fa-sign-out-alt"></i> LOGOUT</button>
         <button class="hamburger" id="hamburger" onclick="toggleMenu()">
             <span></span><span></span><span></span>
         </button>
@@ -239,12 +263,12 @@
     <!-- Side Drawer Menu -->
     <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
     <div class="side-menu" id="sideMenu">
-        <a href="javascript:void(0)" onclick="goToAdd(); toggleMenu();" class="nav-btn">➕ ADD EVENT</a>
-        <a href="team.html" onclick="toggleMenu();" class="team-btn">👥 TEAM</a>
+        <a href="javascript:void(0)" onclick="goToAdd(); toggleMenu();" class="nav-btn"><i class="fas fa-plus"></i> ADD EVENT</a>
+        <a href="team.html" onclick="toggleMenu();" class="team-btn"><i class="fas fa-users"></i> TEAM</a>
     </div>
 
     <div class="main-content">
-        <h2>UPCOMING EVENTS 🚀</h2>
+        <h2><i class="fas fa-rocket"></i> UPCOMING EVENTS</h2>
         
         <div class="filter-container">
             <input type="text" id="search-input" class="search-box" placeholder="🔍 Search Hackathon..." oninput="filterHackathons()">
@@ -278,6 +302,24 @@
     <div class="footer">Made by <span>BitRise</span> 🚀</div>
 
     <script>
+        // --- PAGE ENTRY ANIMATION ---
+        window.addEventListener('load', () => {
+            const overlay = document.getElementById('warp-entry-overlay');
+            const body = document.body;
+
+            // Short delay to ensure white screen is visible first
+            setTimeout(() => {
+                overlay.style.opacity = '0'; // Fade out white
+                body.classList.add('loaded'); // Fade in UI + Zoom out effect
+            }, 100);
+
+            // Remove overlay from DOM after animation to enable clicks
+            setTimeout(() => {
+                overlay.remove();
+            }, 1300);
+        });
+
+        // ... tor baki code (toggleMenu, API calls etc.) ...
         // Mobile Menu Toggle
         function toggleMenu() {
             const hamburger = document.getElementById('hamburger');
@@ -328,11 +370,19 @@
         const API_URL = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://localhost:5000/api/hackathons" : "https://hackathontracker.onrender.com/api/hackathons";
         const listDiv = document.getElementById('hackList');
         const modal = document.getElementById('editModal');
-        const isLoggedIn = localStorage.getItem("isTeamMember") === "true";
+        const isLoggedIn = SessionManager.isAuthenticated();
         let allHackathons = [];
 
+        // Redirect if not authenticated
+        if (!isLoggedIn) {
+            window.location.href = 'login.html';
+        }
+
         function goToAdd() { if (isLoggedIn) window.location.href = "index.html"; else window.location.href = "login.html"; }
-        function logout() { localStorage.removeItem("isTeamMember"); window.location.href = "login.html"; }
+        function logout() { 
+            SessionManager.clearSession();
+            window.location.href = "login.html"; 
+        }
 
         function triggerConfetti() {
             var duration = 3000; var animationEnd = Date.now() + duration; var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };

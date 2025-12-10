@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Hackathons - Hack Tracker</title>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="assets/js/sessionManager.js"></script>
     <script>
-        if (localStorage.getItem("isTeamMember") !== "true") {
+        if (!SessionManager.isAuthenticated()) {
             window.location.href = "login.html";
         }
     </script>
@@ -97,7 +99,7 @@
 <body>
 
     <div class="container">
-        <h2>ADD NEW HACKATHON</h2>
+        <h2><i class="fas fa-plus-circle"></i> ADD NEW HACKATHON</h2>
         <form id="hackForm">
             
             <div class="full-width">
@@ -116,9 +118,9 @@
             <div>
                 <label>Mode</label>
                 <select id="mode">
-                    <option value="Online">Online 🌐</option>
-                    <option value="Offline">Offline 📍</option>
-                    <option value="Hybrid">Hybrid 🤝</option>
+                    <option value="Online"><i class="fas fa-globe"></i> Online</option>
+                    <option value="Offline"><i class="fas fa-map-pin"></i> Offline</option>
+                    <option value="Hybrid"><i class="fas fa-handshake"></i> Hybrid</option>
                 </select>
             </div>
             
@@ -132,14 +134,14 @@
             </div>
             
             <div>
-                <label>Registered? ✅</label>
+                <label><i class="fas fa-check"></i> Registered?</label>
                 <select id="registered">
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
                 </select>
             </div>
             <div>
-                <label>PPT Needed? 📊</label>
+                <label><i class="fas fa-chart-bar"></i> PPT Needed?</label>
                 <select id="pptNeeded">
                     <option value="Yes">Yes</option>
                     <option value="No">No</option>
@@ -165,13 +167,13 @@
                 <input type="url" id="link" required>
             </div>
             
-            <button class="full-width" type="submit">Save To Hack 💾</button>
-            <button class="full-width view-btn" type="button" onclick="window.location.href='dashboard.html'">VIEW SAVED LIST 📋</button>
+            <button class="full-width" type="submit"><i class="fas fa-save"></i> Save To Hack</button>
+            <button class="full-width view-btn" type="button" onclick="window.location.href='dashboard.html'"><i class="fas fa-list"></i> VIEW SAVED LIST</button>
         </form>
     </div>
     
-    <button onclick="logout()" class="logout-btn">LOGOUT 🔒</button>
-    <div class="footer">Made by <span>BitRise</span> 🚀</div>
+    <button onclick="logout()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> LOGOUT</button>
+    <div class="footer">Made by <span>BitRise</span> <i class="fas fa-rocket"></i></div>
 
     <script>
         
@@ -254,7 +256,7 @@
 
         // LOGOUT LOGIC
         function logout() { 
-            localStorage.removeItem("isTeamMember"); 
+            SessionManager.clearSession();
             window.location.href = "login.html"; 
         }
     </script>
