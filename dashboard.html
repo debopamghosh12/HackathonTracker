@@ -291,7 +291,7 @@
             <label style="font-size:12px; color:#aaa"><i class="fas fa-check-square"></i> Registered?</label><select id="edit-reg"><option value="Yes">Yes</option><option value="No">No</option></select>
             <label style="font-size:12px; color:#aaa"><i class="fas fa-traffic-light"></i> Current Status</label>
             <select id="edit-status">
-                <option value="Interested">Interested</option><option value="Applied">Applied</option><option value="Shortlisted">Shortlisted</option><option value="Rejected">Rejected</option><option value="Winner">Winner 🏆</option>
+                <option value="Interested">Interested</option><option value="Applied">Applied</option><option value="Shortlisted">Shortlisted</option><option value="Rejected">Rejected</option><option value="Winner"><i class="fas fa-trophy"></i> Winner</option>
             </select>
             <label style="font-size:12px; color:#00d4ff">Certificate Link</label><input type="url" id="edit-cert" placeholder="Link">
             <label style="font-size:12px; color:#00d4ff">Photos Link</label><input type="url" id="edit-photos" placeholder="Link">
@@ -452,7 +452,7 @@
                             <div class="member-list">${membersList.length > 0 ? membersList.join(', ') : 'No members yet'}</div>
                         </div>
                         <div style="margin-top:10px; display:flex; gap:5px;">${certBtn} ${photoBtn}</div>
-                        <div class="btn-group"><a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a><a href="report.html?id=${hack._id}" target="_blank" class="visit-btn report-btn">📄 REPORT</a>${adminButtons}</div>
+                        <div class="btn-group"><a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a><a href="report.html?id=${hack._id}" target="_blank" class="visit-btn report-btn"><i class="fas fa-file-alt"></i> REPORT</a>${adminButtons}</div>
                     </div>`;
                 listDiv.innerHTML += card;
             });
@@ -472,7 +472,7 @@
                         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                        timer.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m ${seconds}s`;
+                        timer.innerHTML = `<i class="fas fa-hourglass-end" style="margin-right:5px;"></i>${days}d ${hours}h ${minutes}m ${seconds}s`;
                     }
                 });
             }, 1000);
