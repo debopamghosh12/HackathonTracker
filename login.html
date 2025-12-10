@@ -158,10 +158,31 @@
         80% { transform: translate(3px, -3px); }
         100% { transform: translate(0); }
     }
-
+    /* --- SOUND BUTTON --- */
+    .sound-btn {
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        background: rgba(0, 0, 0, 0.6); 
+        border: 1px solid #00ff88; color: #00ff88;
+        padding: 8px 12px; border-radius: 4px;
+        font-family: 'Orbitron', sans-serif; font-size: 10px;
+        cursor: pointer; transition: 0.3s;
+        backdrop-filter: blur(4px);
+    }
+    .sound-btn:hover {
+        background: #00ff88; color: #000; box-shadow: 0 0 10px #00ff88;
+    }
   </style>
 </head>
 <body>
+  <button id="soundToggle" class="sound-btn">🔇 MUTE</button>
+  
+  <audio id="bgMusic" loop>
+    <source src="assets/music/opening.mp3" type="audio/mp3">
+  </audio>
+
+  <audio id="warpSound">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_0762123f9d.mp3" type="audio/mp3">
+  </audio>
   <div class="white-flash" id="whiteFlash"></div>
   <canvas id="bgCanvas" aria-hidden="true"></canvas>
 
@@ -461,6 +482,8 @@
                 // 4. Redirect
                 setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
 
+                // 5. Play Sound & Trigger Warp
+                if(soundEnabled) warpSound.play();
             } else {
                 // === ERROR ===
                 await typeText('> ACCESS DENIED.', 'danger');
@@ -494,7 +517,38 @@
 
         passInput.focus();
         setTimeout(() => container.classList.add('enter'), 100);
+        // --- AUDIO SYSTEM ---
+        const soundBtn = document.getElementById('soundToggle');
+        const bgMusic = document.getElementById('bgMusic');
+        const warpSound = document.getElementById('warpSound');
+        let soundEnabled = false;
 
+        // Volume Settings
+        bgMusic.volume = 0.5; 
+        warpSound.volume = 0.8;
+
+        // Toggle Logic
+        soundBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            if(soundEnabled) {
+                bgMusic.play().catch(() => {}); 
+                soundBtn.textContent = "🔊 AUDIO ON";
+                soundBtn.style.borderColor = "#00d4ff";
+                soundBtn.style.color = "#00d4ff";
+            } else {
+                bgMusic.pause();
+                soundBtn.textContent = "🔇 MUTE";
+                soundBtn.style.borderColor = "#00ff88";
+                soundBtn.style.color = "#00ff88";
+            }
+        });
+
+        // Auto-Enable Audio on first keypress (User Experience)
+        passInput.addEventListener('keydown', () => {
+            if(!soundEnabled && bgMusic.paused) {
+                soundBtn.click(); // Trigger the toggle
+            }
+        }, { once: true });
     })();
 </script>
 </body>
