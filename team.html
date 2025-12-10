@@ -116,9 +116,32 @@
         .fab-item:hover { background: #00d4ff; transform: scale(1.15); }
         .fab-tooltip { position: absolute; right: 70px; background: rgba(0, 212, 255, 0.95); color: #000; padding: 8px 12px; border-radius: 5px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .fab-item:hover .fab-tooltip { opacity: 1; }
+
+        /* --- SOUND BUTTON --- */
+    .sound-btn {
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        background: rgba(0, 0, 0, 0.6); 
+        border: 1px solid #00ff88; color: #00ff88;
+        padding: 8px 12px; border-radius: 4px;
+        font-family: 'Orbitron', sans-serif; font-size: 10px;
+        cursor: pointer; transition: 0.3s;
+        backdrop-filter: blur(4px);
+    }
+    .sound-btn:hover {
+        background: #00ff88; color: #000; box-shadow: 0 0 10px #00ff88;
+    }
     </style>
 </head>
 <body>
+    <button id="soundToggle" class="sound-btn">🔇 MUTE</button>
+  
+  <audio id="bgMusic" loop>
+    <source src="assets/music/team.mp3" type="audio/mp3">
+  </audio>
+
+  <audio id="warpSound">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_0762123f9d.mp3" type="audio/mp3">
+  </audio>
 
     <canvas id="bg-canvas"></canvas>
 
@@ -310,6 +333,60 @@
 
         cards.forEach(card => {
             cardObserver.observe(card);
+        });
+
+        // --- AUDIO SYSTEM (Auto-Play Logic) ---
+        const soundBtn = document.getElementById('soundToggle');
+        const bgMusic = document.getElementById('bgMusic');
+        
+        // 1. Set State to ON by default
+        let soundEnabled = true; 
+        bgMusic.volume = 0.5;
+
+        // 2. Update Button UI Immediately
+        function updateSoundUI() {
+            if (soundEnabled) {
+                soundBtn.textContent = "🔊 AUDIO ON";
+                soundBtn.style.borderColor = "#00d4ff";
+                soundBtn.style.color = "#00d4ff";
+            } else {
+                soundBtn.textContent = "🔇 MUTE";
+                soundBtn.style.borderColor = "#00ff88";
+                soundBtn.style.color = "#00ff88";
+            }
+        }
+        
+        // 3. Attempt Auto-Play
+        const playPromise = bgMusic.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(_ => {
+                // Autoplay started!
+                updateSoundUI();
+            }).catch(error => {
+                // Autoplay blocked. Fallback: Wait for first user click
+                console.log("Autoplay blocked. Waiting for interaction.");
+                soundEnabled = false; // Temporarily off
+                updateSoundUI();
+                
+                // Add a one-time listener to start music on first click/touch
+                document.addEventListener('click', () => {
+                    if(!soundEnabled) {
+                        soundEnabled = true;
+                        bgMusic.play();
+                        updateSoundUI();
+                    }
+                }, { once: true });
+            });
+        }
+
+        // 4. Manual Toggle Logic
+        soundBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering the document listener
+            soundEnabled = !soundEnabled;
+            if(soundEnabled) bgMusic.play();
+            else bgMusic.pause();
+            updateSoundUI();
         });
     </script>
 
