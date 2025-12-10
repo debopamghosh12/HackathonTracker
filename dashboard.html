@@ -271,7 +271,7 @@
         <h2><i class="fas fa-rocket"></i> UPCOMING EVENTS</h2>
         
         <div class="filter-container">
-            <input type="text" id="search-input" class="search-box" placeholder="🔍 Search Hackathon..." oninput="filterHackathons()">
+            <input type="text" id="search-input" class="search-box" placeholder="🔎 Search Hackathon..." oninput="filterHackathons()">
             <select id="mode-filter" class="filter-select" onchange="filterHackathons()">
                 <option value="All">All Modes</option><option value="Online">Online</option><option value="Offline">Offline</option><option value="Hybrid">Hybrid</option>
             </select>
@@ -282,14 +282,14 @@
 
     <div class="modal-overlay" id="editModal">
         <div class="modal">
-            <h3>EDIT DETAILS ✏️</h3>
+            <h3><i class="fas fa-edit"></i> EDIT DETAILS</h3>
             <input type="hidden" id="edit-id">
             <label style="font-size:12px; color:#aaa">Event Name</label><input type="text" id="edit-name">
             <label style="font-size:12px; color:#aaa">Start Date</label><input type="date" id="edit-date">
             <label style="font-size:12px; color:#aaa">End Date</label><input type="date" id="edit-end-date">
             <label style="font-size:12px; color:#aaa">Team Members</label><input type="text" id="edit-members">
-            <label style="font-size:12px; color:#aaa">Registered? ✅</label><select id="edit-reg"><option value="Yes">Yes</option><option value="No">No</option></select>
-            <label style="font-size:12px; color:#aaa">Current Status 🚦</label>
+            <label style="font-size:12px; color:#aaa"><i class="fas fa-check-square"></i> Registered?</label><select id="edit-reg"><option value="Yes">Yes</option><option value="No">No</option></select>
+            <label style="font-size:12px; color:#aaa"><i class="fas fa-traffic-light"></i> Current Status</label>
             <select id="edit-status">
                 <option value="Interested">Interested</option><option value="Applied">Applied</option><option value="Shortlisted">Shortlisted</option><option value="Rejected">Rejected</option><option value="Winner">Winner 🏆</option>
             </select>
@@ -299,7 +299,7 @@
         </div>
     </div>
 
-    <div class="footer">Made by <span>BitRise</span> 🚀</div>
+    <div class="footer">Made by <span>BitRise</span> <i class="fas fa-rocket"></i></div>
 
     <script>
         // --- PAGE ENTRY ANIMATION ---
@@ -425,27 +425,27 @@
                 const currentStatus = hack.currentStatus || 'Interested'; const statusClass = `status-${currentStatus}`;
                 let membersList = hack.teamMembers ? hack.teamMembers.split(',').map(s => s.trim()).filter(s => s) : [];
                 let vacancy = hack.teamSize - membersList.length;
-                let statusText = vacancy > 0 ? `🟢 ${vacancy} Slot(s) Open` : `🔴 Team Full`;
+                let statusText = vacancy > 0 ? `<i class="fas fa-check-circle" style="color:#00ff88"></i> ${vacancy} Slot(s) Open` : `<i class="fas fa-times-circle" style="color:#ff4444"></i> Team Full`;
                 let statusColorClass = vacancy > 0 ? 'status-open' : 'status-full';
 
                 const adminButtons = isLoggedIn ? `
-                    <button class="action-btn edit-btn" onclick="openEdit('${hack._id}', '${hack.name}', '${hack.startDate}', '${hack.endDate}', '${hack.registered}', '${currentStatus}', '${hack.teamMembers || ''}', '${hack.certificate || ''}', '${hack.photos || ''}')">✏️</button>
-                    <button class="action-btn delete-btn" onclick="deleteHack('${hack._id}')">🗑️</button>` : '';
+                    <button class="action-btn edit-btn" onclick="openEdit('${hack._id}', '${hack.name}', '${hack.startDate}', '${hack.endDate}', '${hack.registered}', '${currentStatus}', '${hack.teamMembers || ''}', '${hack.certificate || ''}', '${hack.photos || ''}')"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteHack('${hack._id}')"><i class="fas fa-trash-alt"></i></button>` : '';
 
-                const certBtn = hack.certificate ? `<a href="${hack.certificate}" target="_blank" class="proof-btn">📜 Cert</a>` : '';
-                const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn">📷 Photos</a>` : '';
+                const certBtn = hack.certificate ? `<a href="${hack.certificate}" target="_blank" class="proof-btn"><i class="fas fa-certificate"></i> Cert</a>` : '';
+                const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : '';
 
                 const card = `
                     <div class="hackathon-card ${statusClass}">
                         <div class="title">${hack.name}</div>
                         <div class="countdown-timer" id="timer-${hack._id}" data-date="${hack.startDate}">Loading...</div>
-                        <div class="date-highlight">📅 ${hack.startDate} <span style="font-size:12px; color:#aaa; margin:0 5px;">to</span> ${hack.endDate}</div>
+                        <div class="date-highlight"><i class="fas fa-calendar"></i> ${hack.startDate} <span style="font-size:12px; color:#aaa; margin:0 5px;">to</span> ${hack.endDate}</div>
                         <span class="organizer">By ${hack.organizer}</span>
-                        <div class="info-row"><span>📍 ${hack.location} (${hack.mode})</span></div>
+                        <div class="info-row"><span><i class="fas fa-map-marker-alt"></i> ${hack.location} (${hack.mode})</span></div>
                         <div style="margin-top: 10px; display:flex; gap:5px;">
                             <span class="badge ${pptClass}">PPT: ${hack.pptNeeded}</span>
                             <span class="badge ${regClass}">Reg: ${hack.registered}</span>
-                            <span class="status-badge">🚦 ${currentStatus}</span>
+                            <span class="status-badge"><i class="fas fa-traffic-light"></i> ${currentStatus}</span>
                         </div>
                         <div class="team-section">
                             <span class="team-status ${statusColorClass}">${statusText} (${membersList.length}/${hack.teamSize})</span>
@@ -466,7 +466,7 @@
                     const eventDate = new Date(timer.getAttribute('data-date')).getTime();
                     const now = new Date().getTime();
                     const distance = eventDate - now;
-                    if (distance < 0) { timer.innerHTML = "🔴 EVENT STARTED"; timer.style.color = "#ff4444"; timer.style.borderColor = "#ff4444"; } 
+                    if (distance < 0) { timer.innerHTML = `<i class="fas fa-times-circle"></i> EVENT STARTED`; timer.style.color = "#ff4444"; timer.style.borderColor = "#ff4444"; } 
                     else {
                         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
                         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
