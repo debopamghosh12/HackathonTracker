@@ -39,13 +39,13 @@
         .nav-left { display: flex; gap: 15px; }
 
         .nav-btn { text-decoration: none; color: #00ff88; font-weight: bold; border: 1px solid #00ff88; padding: 8px 16px; border-radius: 8px; font-family: 'Orbitron', sans-serif; transition: 0.3s; font-size: 14px; cursor: pointer; background: rgba(0,0,0,0.5); }
-        .nav-btn:hover { background: #00ff88; color: #000; box-shadow: 0 0 15px #00ff88; }
+        .nav-btn:hover { background: #00ff88; color: #000; box-shadow: 0 0 10px #00ff88; }
 
         .team-btn { text-decoration: none; color: #00d4ff; font-weight: bold; border: 1px solid #00d4ff; padding: 8px 16px; border-radius: 8px; font-family: 'Orbitron', sans-serif; transition: 0.3s; font-size: 14px; cursor: pointer; background: rgba(0,0,0,0.5); }
-        .team-btn:hover { background: #00d4ff; color: #000; box-shadow: 0 0 15px #00d4ff; }
+        .team-btn:hover { background: #00d4ff; color: #000; box-shadow: 0 0 10px #00d4ff; }
 
         .auth-btn { background: rgba(0,0,0,0.5); border: 1px solid #ff4444; color: #ff4444; font-weight: bold; padding: 8px 16px; border-radius: 8px; font-family: 'Orbitron', sans-serif; transition: 0.3s; cursor: pointer; font-size: 14px; }
-        .auth-btn:hover { background: #ff4444; color: white; box-shadow: 0 0 15px #ff4444; }
+        .auth-btn:hover { background: #ff4444; color: white; box-shadow: 0 0 10px #ff4444; }
 
         /* Hamburger Menu */
         .hamburger {
@@ -98,7 +98,7 @@
         /* CONTENT WRAPPER */
         .main-content { margin-top: 100px; width: 100%; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
 
-        h2 { font-family: 'Orbitron', sans-serif; color: #00d4ff; text-shadow: 0 0 15px #00d4ff; font-size: 36px; margin-bottom: 20px; text-transform: uppercase; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 10px; }
+        h2 { font-family: 'Orbitron', sans-serif; color: #00d4ff; text-shadow: 0 0 5px #00d4ff; font-size: 36px; margin-bottom: 20px; text-transform: uppercase; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 10px; }
 
         .filter-container { display: flex; gap: 10px; margin-bottom: 30px; width: 90%; max-width: 600px; }
         .search-box, .filter-select { padding: 12px; border-radius: 8px; border: 1px solid #333; background: rgba(20,20,20,0.8); color: #fff; font-family: 'Poppins', sans-serif; backdrop-filter: blur(5px); }
@@ -112,7 +112,7 @@
         .hackathon-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0, 212, 255, 0.15); border-color: #555; }
         
         /* ... Baki CSS Same ... */
-        .status-Winner { border-top-color: #FFD700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); } 
+        .status-Winner { border-top-color: #FFD700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); } 
         .status-Shortlisted { border-top-color: #bc13fe; } .status-Applied { border-top-color: #00d4ff; } .status-Interested { border-top-color: #00ff88; } .status-Rejected { border-top-color: #ff4444; opacity: 0.8; } .status-undefined { border-top-color: #888; }
 
         .title { font-size: 22px; font-weight: 800; margin-bottom: 5px; font-family: 'Orbitron', sans-serif; }
@@ -146,6 +146,44 @@
         .cancel-btn { flex: 1; background: #333; color: #fff; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
         .footer { margin-top: 20px; font-size: 14px; color: #888; font-family: 'Orbitron', sans-serif; padding-bottom: 20px; }
         .footer span { color: #00ff88; font-weight: bold; }
+
+        /* LOADING SPINNER */
+        .spinner {
+            border: 3px solid rgba(0, 255, 136, 0.2);
+            border-top: 3px solid #00ff88;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+        .loading-text { color: #00d4ff; font-weight: bold; margin-top: 15px; font-family: 'Orbitron', sans-serif; }
+
+        /* ERROR STYLING */
+        .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 20px; }
+        .error-icon { color: #ff4444; font-size: 48px; }
+        .error-text { color: #ff4444; font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 16px; text-align: center; }
+        .error-details { color: #ccc; font-size: 12px; text-align: center; max-width: 400px; }
+        .retry-btn { background: #ff4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .retry-btn:hover { background: #ff6666; box-shadow: 0 0 10px #ff4444; }
+
+        /* EMPTY STATE */
+        .empty-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 20px; }
+        .empty-icon { color: #00d4ff; font-size: 64px; opacity: 0.5; }
+        .empty-text { color: #888; font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 18px; }
+        .empty-subtext { color: #666; font-size: 13px; text-align: center; max-width: 400px; }
+        .empty-cta { background: #00d4ff; color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; transition: 0.3s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        .empty-cta:hover { background: #00ff88; box-shadow: 0 0 10px #00d4ff; }
+
+        /* BUTTON LOADING STATES */
+        .btn-loading { opacity: 0.7; pointer-events: none; }
+        .btn-loading::after { content: " ..."; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 20% { content: " "; } 40% { content: " ."; } 60% { content: " .."; } 80%, 100% { content: " ..."; } }
 
         /* MOBILE RESPONSIVE */
         @media (max-width: 768px) {
@@ -271,27 +309,32 @@
         <h2><i class="fas fa-rocket"></i> UPCOMING EVENTS</h2>
         
         <div class="filter-container">
-            <input type="text" id="search-input" class="search-box" placeholder="🔍 Search Hackathon..." oninput="filterHackathons()">
+            <input type="text" id="search-input" class="search-box" placeholder="🔎 Search Hackathon..." oninput="filterHackathons()">
             <select id="mode-filter" class="filter-select" onchange="filterHackathons()">
                 <option value="All">All Modes</option><option value="Online">Online</option><option value="Offline">Offline</option><option value="Hybrid">Hybrid</option>
             </select>
         </div>
 
-        <div class="list-container" id="hackList"><p style="text-align: center; color: #555;">Loading Data...</p></div>
+        <div class="list-container" id="hackList">
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading Hackathons...</div>
+            </div>
+        </div>
     </div>
 
     <div class="modal-overlay" id="editModal">
         <div class="modal">
-            <h3>EDIT DETAILS ✏️</h3>
+            <h3><i class="fas fa-edit"></i> EDIT DETAILS</h3>
             <input type="hidden" id="edit-id">
             <label style="font-size:12px; color:#aaa">Event Name</label><input type="text" id="edit-name">
             <label style="font-size:12px; color:#aaa">Start Date</label><input type="date" id="edit-date">
             <label style="font-size:12px; color:#aaa">End Date</label><input type="date" id="edit-end-date">
             <label style="font-size:12px; color:#aaa">Team Members</label><input type="text" id="edit-members">
-            <label style="font-size:12px; color:#aaa">Registered? ✅</label><select id="edit-reg"><option value="Yes">Yes</option><option value="No">No</option></select>
-            <label style="font-size:12px; color:#aaa">Current Status 🚦</label>
+            <label style="font-size:12px; color:#aaa"><i class="fas fa-check-square"></i> Registered?</label><select id="edit-reg"><option value="Yes">Yes</option><option value="No">No</option></select>
+            <label style="font-size:12px; color:#aaa"><i class="fas fa-traffic-light"></i> Current Status</label>
             <select id="edit-status">
-                <option value="Interested">Interested</option><option value="Applied">Applied</option><option value="Shortlisted">Shortlisted</option><option value="Rejected">Rejected</option><option value="Winner">Winner 🏆</option>
+                <option value="Interested">Interested</option><option value="Applied">Applied</option><option value="Shortlisted">Shortlisted</option><option value="Rejected">Rejected</option><option value="Winner"><i class="fas fa-trophy"></i> Winner</option>
             </select>
             <label style="font-size:12px; color:#00d4ff">Certificate Link</label><input type="url" id="edit-cert" placeholder="Link">
             <label style="font-size:12px; color:#00d4ff">Photos Link</label><input type="url" id="edit-photos" placeholder="Link">
@@ -299,7 +342,7 @@
         </div>
     </div>
 
-    <div class="footer">Made by <span>BitRise</span> 🚀</div>
+    <div class="footer">Made by <span>BitRise</span> <i class="fas fa-rocket"></i></div>
 
     <script>
         // --- PAGE ENTRY ANIMATION ---
@@ -398,10 +441,25 @@
 
         async function loadHackathons() {
             try {
-                const res = await fetch(API_URL); let data = await res.json();
+                const res = await fetch(API_URL);
+                if (!res.ok) {
+                    throw new Error(`HTTP Error: ${res.status}`);
+                }
+                let data = await res.json();
                 data.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-                allHackathons = data; renderList(allHackathons);
-            } catch (err) { console.error(err); listDiv.innerHTML = "<p style='color:red; text-align:center;'>Server Error!</p>"; }
+                allHackathons = data;
+                renderList(allHackathons);
+            } catch (err) {
+                console.error('Error loading hackathons:', err);
+                listDiv.innerHTML = `
+                    <div class="error-container">
+                        <i class="fas fa-exclamation-circle error-icon"></i>
+                        <div class="error-text">Failed to Load Hackathons</div>
+                        <div class="error-details">${err.message}</div>
+                        <button class="retry-btn" onclick="loadHackathons()"><i class="fas fa-redo"></i> Retry</button>
+                    </div>
+                `;
+            }
         }
 
         function filterHackathons() {
@@ -417,7 +475,19 @@
 
         function renderList(data) {
             listDiv.innerHTML = "";
-            if (data.length === 0) { listDiv.innerHTML = "<p style='color:#777; text-align:center;'>No match found.</p>"; return; }
+            if (data.length === 0) {
+                listDiv.innerHTML = `
+                    <div class="empty-container">
+                        <i class="fas fa-inbox empty-icon"></i>
+                        <div class="empty-text">No Hackathons Found</div>
+                        <div class="empty-subtext">Start tracking your hackathon journey by adding your first event</div>
+                        <a href="javascript:void(0)" onclick="goToAdd()" class="empty-cta">
+                            <i class="fas fa-plus"></i> Add Your First Hackathon
+                        </a>
+                    </div>
+                `;
+                return;
+            }
 
             data.forEach(hack => {
                 const pptClass = hack.pptNeeded === 'Yes' ? 'yes' : 'no';
@@ -425,34 +495,34 @@
                 const currentStatus = hack.currentStatus || 'Interested'; const statusClass = `status-${currentStatus}`;
                 let membersList = hack.teamMembers ? hack.teamMembers.split(',').map(s => s.trim()).filter(s => s) : [];
                 let vacancy = hack.teamSize - membersList.length;
-                let statusText = vacancy > 0 ? `🟢 ${vacancy} Slot(s) Open` : `🔴 Team Full`;
+                let statusText = vacancy > 0 ? `<i class="fas fa-check-circle" style="color:#00ff88"></i> ${vacancy} Slot(s) Open` : `<i class="fas fa-times-circle" style="color:#ff4444"></i> Team Full`;
                 let statusColorClass = vacancy > 0 ? 'status-open' : 'status-full';
 
                 const adminButtons = isLoggedIn ? `
-                    <button class="action-btn edit-btn" onclick="openEdit('${hack._id}', '${hack.name}', '${hack.startDate}', '${hack.endDate}', '${hack.registered}', '${currentStatus}', '${hack.teamMembers || ''}', '${hack.certificate || ''}', '${hack.photos || ''}')">✏️</button>
-                    <button class="action-btn delete-btn" onclick="deleteHack('${hack._id}')">🗑️</button>` : '';
+                    <button class="action-btn edit-btn" onclick="openEdit('${hack._id}', '${hack.name}', '${hack.startDate}', '${hack.endDate}', '${hack.registered}', '${currentStatus}', '${hack.teamMembers || ''}', '${hack.certificate || ''}', '${hack.photos || ''}')"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteHack('${hack._id}')"><i class="fas fa-trash-alt"></i></button>` : '';
 
-                const certBtn = hack.certificate ? `<a href="${hack.certificate}" target="_blank" class="proof-btn">📜 Cert</a>` : '';
-                const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn">📷 Photos</a>` : '';
+                const certBtn = hack.certificate ? `<a href="${hack.certificate}" target="_blank" class="proof-btn"><i class="fas fa-certificate"></i> Cert</a>` : '';
+                const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : '';
 
                 const card = `
                     <div class="hackathon-card ${statusClass}">
                         <div class="title">${hack.name}</div>
                         <div class="countdown-timer" id="timer-${hack._id}" data-date="${hack.startDate}">Loading...</div>
-                        <div class="date-highlight">📅 ${hack.startDate} <span style="font-size:12px; color:#aaa; margin:0 5px;">to</span> ${hack.endDate}</div>
+                        <div class="date-highlight"><i class="fas fa-calendar"></i> ${hack.startDate} <span style="font-size:12px; color:#aaa; margin:0 5px;">to</span> ${hack.endDate}</div>
                         <span class="organizer">By ${hack.organizer}</span>
-                        <div class="info-row"><span>📍 ${hack.location} (${hack.mode})</span></div>
+                        <div class="info-row"><span><i class="fas fa-map-marker-alt"></i> ${hack.location} (${hack.mode})</span></div>
                         <div style="margin-top: 10px; display:flex; gap:5px;">
                             <span class="badge ${pptClass}">PPT: ${hack.pptNeeded}</span>
                             <span class="badge ${regClass}">Reg: ${hack.registered}</span>
-                            <span class="status-badge">🚦 ${currentStatus}</span>
+                            <span class="status-badge"><i class="fas fa-traffic-light"></i> ${currentStatus}</span>
                         </div>
                         <div class="team-section">
                             <span class="team-status ${statusColorClass}">${statusText} (${membersList.length}/${hack.teamSize})</span>
                             <div class="member-list">${membersList.length > 0 ? membersList.join(', ') : 'No members yet'}</div>
                         </div>
                         <div style="margin-top:10px; display:flex; gap:5px;">${certBtn} ${photoBtn}</div>
-                        <div class="btn-group"><a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a><a href="report.html?id=${hack._id}" target="_blank" class="visit-btn report-btn">📄 REPORT</a>${adminButtons}</div>
+                        <div class="btn-group"><a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a><a href="report.html?id=${hack._id}" target="_blank" class="visit-btn report-btn"><i class="fas fa-file-alt"></i> REPORT</a>${adminButtons}</div>
                     </div>`;
                 listDiv.innerHTML += card;
             });
@@ -466,19 +536,33 @@
                     const eventDate = new Date(timer.getAttribute('data-date')).getTime();
                     const now = new Date().getTime();
                     const distance = eventDate - now;
-                    if (distance < 0) { timer.innerHTML = "🔴 EVENT STARTED"; timer.style.color = "#ff4444"; timer.style.borderColor = "#ff4444"; } 
+                    if (distance < 0) { timer.innerHTML = `<i class="fas fa-times-circle"></i> EVENT STARTED`; timer.style.color = "#ff4444"; timer.style.borderColor = "#ff4444"; } 
                     else {
                         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
                         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                        timer.innerHTML = `⏳ ${days}d ${hours}h ${minutes}m ${seconds}s`;
+                        timer.innerHTML = `<i class="fas fa-hourglass-end" style="margin-right:5px;"></i>${days}d ${hours}h ${minutes}m ${seconds}s`;
                     }
                 });
             }, 1000);
         }
 
-        async function deleteHack(id) { if(!confirm("Delete this?")) return; await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); loadHackathons(); }
+        async function deleteHack(id) {
+            if(!confirm("Are you sure? This action cannot be undone.")) return;
+            const btn = event.target;
+            btn.classList.add('btn-loading');
+            btn.disabled = true;
+            try {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                loadHackathons();
+            } catch (err) {
+                console.error('Delete error:', err);
+                alert('Failed to delete hackathon');
+                btn.classList.remove('btn-loading');
+                btn.disabled = false;
+            }
+        }
 
         function openEdit(id, name, date, endDate, reg, status, members, cert, photos) {
             document.getElementById('edit-id').value = id;
@@ -494,22 +578,46 @@
         }
         function closeModal() { modal.style.display = 'none'; }
         
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                closeModal();
+            }
+        });
+        
         async function saveEdit() {
             const id = document.getElementById('edit-id').value;
             const status = document.getElementById('edit-status').value;
-            if (status === "Winner") triggerConfetti();
-            const updatedData = {
-                name: document.getElementById('edit-name').value,
-                startDate: document.getElementById('edit-date').value,
-                endDate: document.getElementById('edit-end-date').value,
-                teamMembers: document.getElementById('edit-members').value,
-                registered: document.getElementById('edit-reg').value,
-                currentStatus: status,
-                certificate: document.getElementById('edit-cert').value,
-                photos: document.getElementById('edit-photos').value
-            };
-            await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) });
-            closeModal(); loadHackathons();
+            const saveBtn = document.querySelector('.save-btn');
+            saveBtn.classList.add('btn-loading');
+            saveBtn.disabled = true;
+
+            try {
+                if (status === "Winner") triggerConfetti();
+                const updatedData = {
+                    name: document.getElementById('edit-name').value,
+                    startDate: document.getElementById('edit-date').value,
+                    endDate: document.getElementById('edit-end-date').value,
+                    teamMembers: document.getElementById('edit-members').value,
+                    registered: document.getElementById('edit-reg').value,
+                    currentStatus: status,
+                    certificate: document.getElementById('edit-cert').value,
+                    photos: document.getElementById('edit-photos').value
+                };
+                const res = await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+                if (!res.ok) throw new Error('Update failed');
+                closeModal();
+                loadHackathons();
+            } catch (err) {
+                console.error('Save error:', err);
+                alert('Failed to save changes');
+                saveBtn.classList.remove('btn-loading');
+                saveBtn.disabled = false;
+            }
         }
         loadHackathons();
     </script>
