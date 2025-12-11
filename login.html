@@ -4,6 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Team Login - BitRise</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon_io/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon_io/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon_io/favicon-16x16.png">
+  <link rel="manifest" href="assets/favicon_io/site.webmanifest">
+  <link rel="icon" href="assets/favicon_io/favicon.ico">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
@@ -163,16 +168,14 @@
         position: fixed; top: 20px; right: 20px; z-index: 1000;
         background: rgba(0, 0, 0, 0.6); 
         border: 1px solid #00ff88; color: #00ff88;
-        padding: 8px 12px; border-radius: 4px;
-        font-family: 'Orbitron', sans-serif; font-size: 10px;
+        padding: 10px 16px; border-radius: 8px;
+        font-family: 'Orbitron', sans-serif; font-size: 12px;
         cursor: pointer; transition: 0.3s;
         backdrop-filter: blur(4px);
+        display: inline-flex; align-items: center; gap: 8px;
     }
     .sound-btn:hover {
-        background: #00ff88; color: #000; box-shadow: 0 0 10px #00ff88;
-    }
-  .sound-btn:hover {
-        background: #00ff88; color: #000; box-shadow: 0 0 10px #00ff88;
+        background: #64f85f; border:black;color: #000; box-shadow: 0 0 10px #00ff88;
     }
 
     /* --- UX ADD-ONS --- */
@@ -181,7 +184,10 @@
   </style>
 </head>
 <body>
-  <button id="soundToggle" class="sound-btn">🔇 MUTE</button>
+  <button id="soundToggle" class="sound-btn" aria-pressed="false" title="Toggle audio">
+    <span id="soundIcon" aria-hidden="true">🔇</span>
+    <span id="soundLabel" class="sr-only" style="position:absolute;left:-9999px;">Audio off</span>
+  </button>
   
   <audio id="bgMusic" loop>
     <source src="/assets/music/opening.mp3" type="audio/mp3">
@@ -202,6 +208,7 @@
         <input id="passcode" type="password" placeholder="PASSCODE" aria-label="Secret Code" autocomplete="off">
         <button class="eye-btn" id="toggleEye" title="Show/Hide code" aria-pressed="false">SHOW</button>
       </div>
+      <div id="capsNotice" class="hint" style="display:none;color:#bdeedd;">CAPS LOCK IS ON</div>
 
       <div style="display:flex;align-items:center;justify-content:center;margin:15px 0;gap:8px;">
         <input type="checkbox" id="rememberMe" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent1);">
@@ -222,7 +229,7 @@
       </div>
 
       <div class="footer">
-        SECURE GATEWAY • V2.5
+        BITRISE • OFFICIAL SEQUENCE
         <div class="hint">Unauthorized access is logged.</div>
       </div>
 
@@ -264,6 +271,7 @@
         const enterHint = document.getElementById('enterHint');
         const cooldownBar = document.getElementById('cooldown');
         const cooldownInner = document.querySelector('#cooldown .cooldown-inner');
+        const capsNotice = document.getElementById('capsNotice');
 
         // --- THREE.JS VARIABLES (Global rakha bhalo) ---
         let scene, camera, renderer, starGeo, stars;
@@ -553,6 +561,15 @@
             enterHint.style.display = hasVal ? 'block' : 'none';
             if (hasVal) passInput.removeAttribute('aria-invalid');
         });
+        // Caps Lock indicator logic
+        const updateCaps = (e) => {
+            if (!capsNotice || !e || !e.getModifierState) return;
+            const on = e.getModifierState('CapsLock');
+            capsNotice.style.display = on ? 'block' : 'none';
+        };
+        passInput.addEventListener('keydown', updateCaps);
+        passInput.addEventListener('keyup', updateCaps);
+        passInput.addEventListener('blur', () => { if (capsNotice) capsNotice.style.display = 'none'; });
         const eyeBtn = document.getElementById('toggleEye');
         let holdReveal = false;
         let holdReleasedAt = 0;
@@ -624,6 +641,8 @@
         })();
         // --- AUDIO SYSTEM ---
         const soundBtn = document.getElementById('soundToggle');
+        const soundIcon = document.getElementById('soundIcon');
+        const soundLabel = document.getElementById('soundLabel');
         const bgMusic = document.getElementById('bgMusic');
         const warpSound = document.getElementById('warpSound');
         let soundEnabled = false;
@@ -633,25 +652,38 @@
         warpSound.volume = 0.8;
 
         // Toggle Logic
+        function updateSoundUI() {
+            if (soundEnabled) {
+                soundIcon.textContent = '🔊';
+                soundLabel.textContent = 'Audio on';
+                soundBtn.style.borderColor = '#00d4ff';
+                soundBtn.style.color = '#00d4ff';
+                soundBtn.setAttribute('aria-pressed', 'true');
+            } else {
+                soundIcon.textContent = '🔇';
+                soundLabel.textContent = 'Audio off';
+                soundBtn.style.borderColor = '#00ff88';
+                soundBtn.style.color = '#00ff88';
+                soundBtn.setAttribute('aria-pressed', 'false');
+            }
+        }
+
         soundBtn.addEventListener('click', () => {
             soundEnabled = !soundEnabled;
-            if(soundEnabled) {
-                bgMusic.play().catch(() => {}); 
-                soundBtn.textContent = "🔊 AUDIO ON";
-                soundBtn.style.borderColor = "#00d4ff";
-                soundBtn.style.color = "#00d4ff";
+            if (soundEnabled) {
+                bgMusic.play().catch(() => {});
             } else {
                 bgMusic.pause();
-                soundBtn.textContent = "🔇 MUTE";
-                soundBtn.style.borderColor = "#00ff88";
-                soundBtn.style.color = "#00ff88";
             }
+            updateSoundUI();
         });
 
         // Auto-Enable Audio on first keypress (User Experience)
         passInput.addEventListener('keydown', () => {
             if(!soundEnabled && bgMusic.paused) {
-                soundBtn.click(); // Trigger the toggle
+                soundEnabled = true;
+                bgMusic.play().catch(() => {});
+                updateSoundUI();
             }
         }, { once: true });
     })();
