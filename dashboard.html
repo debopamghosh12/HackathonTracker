@@ -445,6 +445,9 @@
     listDiv.innerHTML = "";
     if (data.length === 0) { listDiv.innerHTML = "<p style='text-align:center; opacity:0.6;'>No match found.</p>"; return; }
 
+    // 👇 DEBUG: Console e check kor "isLoggedIn" true naki false
+    console.log("Login Status:", isLoggedIn); 
+
     data.forEach(hack => {
         // --- EXISTING LOGIC ---
         const pptClass = hack.pptNeeded === 'Yes' ? 'yes' : 'no';
@@ -453,7 +456,7 @@
         const statusClass = `status-${currentStatus}`;
         let membersList = hack.teamMembers ? hack.teamMembers.split(',').map(s => s.trim()).filter(s => s) : [];
         let vacancy = hack.teamSize - membersList.length;
-        let statusText = vacancy > 0 ? `<i class="fas fa-check-circle" style="color:var(--accent-green)"></i> ${vacancy} Slot(s) Open` : `<i class="fas fa-times-circle" style="color:var(--danger)"></i> Team Full`;
+        let statusText = vacancy > 0 ? `<i class="fas fa-check-circle" style="color:#00ff88"></i> ${vacancy} Slot(s) Open` : `<i class="fas fa-times-circle" style="color:#ff4444"></i> Team Full`;
         let statusColorClass = vacancy > 0 ? 'status-open' : 'status-full';
 
         const adminButtons = isLoggedIn ? `
@@ -464,13 +467,18 @@
         const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : '';
         const calLink = generateCalendarLink(hack.name, hack.startDate, hack.endDate, hack.location);
 
-        // --- 👇 NEW LOGIC: TEAM CODE (Only for Admins) ---
+        // --- 👇 FIXED TEAM CODE LOGIC (Colors Hardcoded) ---
         let teamCodeHTML = "";
+        
+        // Debug Log per item
+        console.log(`Event: ${hack.name}, Code: ${hack.teamCode}`);
+
         if (isLoggedIn) {
             const codeValue = hack.teamCode ? hack.teamCode : "Not Set";
+            // Style: Cyan Border, White Text (Visible on Dark Background)
             teamCodeHTML = `
-                <div class="code-box" style="background: rgba(0, 212, 255, 0.1); border: 1px dashed var(--primary); padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 10px; color: var(--primary); font-family: 'Courier New', monospace; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-key"></i> Code: <span style="color:var(--text-color); user-select:all;">${codeValue}</span>
+                <div class="code-box" style="background: rgba(0, 212, 255, 0.1); border: 1px dashed #00d4ff; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 10px; color: #00d4ff; font-family: 'Courier New', monospace; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-key"></i> Code: <span style="color: #ffffff; background: #333; padding: 2px 6px; border-radius: 4px; user-select:all;">${codeValue}</span>
                 </div>`;
         }
 
@@ -513,7 +521,6 @@
     });
     startCountdown();
 }
-
         function startCountdown() {
         setInterval(() => {
         const timers = document.querySelectorAll('.countdown-timer');
