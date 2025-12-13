@@ -451,7 +451,7 @@
         const currentStatus = hack.currentStatus || 'Interested'; const statusClass = `status-${currentStatus}`;
         let membersList = hack.teamMembers ? hack.teamMembers.split(',').map(s => s.trim()).filter(s => s) : [];
         let vacancy = hack.teamSize - membersList.length;
-        let statusText = vacancy > 0 ? `<i class="fas fa-check-circle" style="color:var(--accent-green)"></i> ${vacancy} Slot(s) Open` : `<i class="fas fa-times-circle" style="color:var(--danger)"></i> Team Full`;
+        let statusText = vacancy > 0 ? `<i class="fas fa-check-circle" style="color:#00ff88"></i> ${vacancy} Slot(s) Open` : `<i class="fas fa-times-circle" style="color:#ff4444"></i> Team Full`;
         let statusColorClass = vacancy > 0 ? 'status-open' : 'status-full';
 
         const adminButtons = isLoggedIn ? `
@@ -462,28 +462,44 @@
         const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : '';
         const calLink = generateCalendarLink(hack.name, hack.startDate, hack.endDate, hack.location);
 
+        // --- 👇 IMPROVED TEAM CODE DESIGN ---
+        let teamCodeHTML = "";
+        if (isLoggedIn && hack.teamCode) {
+            teamCodeHTML = `
+                <div class="team-code-container" style="margin-top: 5px; display: flex; align-items: center; gap: 5px; font-size: 11px; background: rgba(0, 212, 255, 0.05); padding: 4px 8px; border-radius: 4px; width: fit-content;">
+                    <i class="fas fa-key" style="color: #00d4ff;"></i> 
+                    <span style="color: #aaa;">Team Code:</span>
+                    <span class="secret-code" style="color: #fff; font-family: monospace; letter-spacing: 1px; cursor: pointer;" title="Click to Copy" onclick="navigator.clipboard.writeText('${hack.teamCode}'); alert('Code Copied!');">
+                        ${hack.teamCode} <i class="fas fa-copy" style="font-size: 9px; margin-left: 3px; opacity: 0.7;"></i>
+                    </span>
+                </div>`;
+        }
+
         const card = `
             <div class="hackathon-card ${statusClass}">
                 <div class="title">${hack.name}</div>
-                
                 <div class="countdown-timer" id="timer-${hack._id}" data-start="${hack.startDate}" data-end="${hack.endDate}">Loading...</div>
-
                 <div class="date-highlight"><i class="fas fa-calendar"></i> ${hack.startDate} <span style="font-size:12px; opacity:0.7; margin:0 5px;">to</span> ${hack.endDate}</div>
                 <span class="organizer">By ${hack.organizer}</span>
                 <div class="info-row"><span><i class="fas fa-map-marker-alt"></i> ${hack.location} (${hack.mode})</span></div>
-                <div style="margin-top: 10px; display:flex; gap:5px;">
+                
+                <div style="margin-top: 10px; display:flex; gap:5px; flex-wrap: wrap;">
                     <span class="badge ${pptClass}">PPT: ${hack.pptNeeded}</span>
                     <span class="badge ${regClass}">Reg: ${hack.registered}</span>
                     <span class="status-badge"><i class="fas fa-traffic-light"></i> ${currentStatus}</span>
                 </div>
+
                 <div class="team-section">
                     <span class="team-status ${statusColorClass}">${statusText} (${membersList.length}/${hack.teamSize})</span>
-                    <div class="member-list">${membersList.length > 0 ? membersList.join(', ') : 'No members yet'}</div>
+                    ${teamCodeHTML}
+                    <div class="member-list" style="margin-top: 5px;">${membersList.length > 0 ? membersList.join(', ') : 'No members yet'}</div>
                 </div>
+                
                 <div style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;">
                     ${certBtn} ${photoBtn}
-                    <a href="${calLink}" target="_blank" class="calendar-btn"><i class="fas fa-calendar-plus"></i> Remind Me</a>
+                    <a href="${calLink}" target="_blank" class="calendar-btn"><i class="fas fa-calendar-plus"></i> Remind</a>
                 </div>
+                
                 <div class="btn-group">
                     <a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a>
                     <a href="report.html?id=${hack._id}" target="_blank" class="visit-btn report-btn"><i class="fas fa-file-alt"></i> REPORT</a>
@@ -494,7 +510,6 @@
     });
     startCountdown();
 }
-
         function startCountdown() {
         setInterval(() => {
         const timers = document.querySelectorAll('.countdown-timer');
