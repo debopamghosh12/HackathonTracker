@@ -446,9 +446,11 @@
     if (data.length === 0) { listDiv.innerHTML = "<p style='text-align:center; opacity:0.6;'>No match found.</p>"; return; }
 
     data.forEach(hack => {
+        // --- EXISTING LOGIC ---
         const pptClass = hack.pptNeeded === 'Yes' ? 'yes' : 'no';
         const regClass = hack.registered === 'Yes' ? 'yes' : 'no';
-        const currentStatus = hack.currentStatus || 'Interested'; const statusClass = `status-${currentStatus}`;
+        const currentStatus = hack.currentStatus || 'Interested'; 
+        const statusClass = `status-${currentStatus}`;
         let membersList = hack.teamMembers ? hack.teamMembers.split(',').map(s => s.trim()).filter(s => s) : [];
         let vacancy = hack.teamSize - membersList.length;
         let statusText = vacancy > 0 ? `<i class="fas fa-check-circle" style="color:var(--accent-green)"></i> ${vacancy} Slot(s) Open` : `<i class="fas fa-times-circle" style="color:var(--danger)"></i> Team Full`;
@@ -462,6 +464,17 @@
         const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : '';
         const calLink = generateCalendarLink(hack.name, hack.startDate, hack.endDate, hack.location);
 
+        // --- 👇 NEW LOGIC: TEAM CODE (Only for Admins) ---
+        let teamCodeHTML = "";
+        if (isLoggedIn) {
+            const codeValue = hack.teamCode ? hack.teamCode : "Not Set";
+            teamCodeHTML = `
+                <div class="code-box" style="background: rgba(0, 212, 255, 0.1); border: 1px dashed var(--primary); padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-top: 10px; color: var(--primary); font-family: 'Courier New', monospace; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-key"></i> Code: <span style="color:var(--text-color); user-select:all;">${codeValue}</span>
+                </div>`;
+        }
+
+        // --- CARD CONSTRUCTION ---
         const card = `
             <div class="hackathon-card ${statusClass}">
                 <div class="title">${hack.name}</div>
@@ -471,19 +484,25 @@
                 <div class="date-highlight"><i class="fas fa-calendar"></i> ${hack.startDate} <span style="font-size:12px; opacity:0.7; margin:0 5px;">to</span> ${hack.endDate}</div>
                 <span class="organizer">By ${hack.organizer}</span>
                 <div class="info-row"><span><i class="fas fa-map-marker-alt"></i> ${hack.location} (${hack.mode})</span></div>
+                
                 <div style="margin-top: 10px; display:flex; gap:5px;">
                     <span class="badge ${pptClass}">PPT: ${hack.pptNeeded}</span>
                     <span class="badge ${regClass}">Reg: ${hack.registered}</span>
                     <span class="status-badge"><i class="fas fa-traffic-light"></i> ${currentStatus}</span>
                 </div>
+
+                ${teamCodeHTML}
+
                 <div class="team-section">
                     <span class="team-status ${statusColorClass}">${statusText} (${membersList.length}/${hack.teamSize})</span>
                     <div class="member-list">${membersList.length > 0 ? membersList.join(', ') : 'No members yet'}</div>
                 </div>
+                
                 <div style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;">
                     ${certBtn} ${photoBtn}
                     <a href="${calLink}" target="_blank" class="calendar-btn"><i class="fas fa-calendar-plus"></i> Remind Me</a>
                 </div>
+                
                 <div class="btn-group">
                     <a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a>
                     <a href="report.html?id=${hack._id}" target="_blank" class="visit-btn report-btn"><i class="fas fa-file-alt"></i> REPORT</a>
