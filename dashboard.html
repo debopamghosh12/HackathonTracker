@@ -368,12 +368,13 @@
         const listDiv = document.getElementById('hackList');
         const modal = document.getElementById('editModal');
         const isLoggedIn = SessionManager.isAuthenticated();
+        const isGuest = sessionStorage.getItem('guestMode') === 'true';
         let allHackathons = [];
 
         //if (!isLoggedIn) { window.location.href = 'login.html'; }
 
         function goToAdd() { if (isLoggedIn) window.location.href = "index.html"; else window.location.href = "login.html"; }
-        function logout() { SessionManager.clearSession(); window.location.href = "login.html"; }
+        function logout() { SessionManager.clearSession(); try { sessionStorage.removeItem('guestMode'); } catch(e) {} window.location.href = "login.html"; }
 
         function triggerConfetti() {
             var duration = 3000; var animationEnd = Date.now() + duration; var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };

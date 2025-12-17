@@ -223,10 +223,10 @@
 
       <div id="errorMsg" role="status" aria-live="assertive">Access Denied.</div>
 
-      <div class="links">
-        <a href="dashboard.html" class="back-link">Guest View →</a>
-        <a href="#" id="forgotLink" class="back-link">Lost Key?</a>
-      </div>
+            <div class="links">
+                <a href="#" class="back-link" id="guestViewLink">Guest View →</a>
+                <a href="#" id="forgotLink" class="back-link">Lost Key?</a>
+            </div>
 
       <div class="footer">
         BITRISE • OFFICIAL SEQUENCE
@@ -428,6 +428,19 @@
 
         function clearSession() {
             SessionManager.clearSession();
+        }
+
+        // Guest mode helper: mark session as guest and navigate
+        function enterGuestMode() {
+            try {
+                sessionStorage.setItem('guestMode', 'true');
+                // Ensure no authenticated flags linger
+                localStorage.removeItem('isTeamMember');
+                sessionStorage.removeItem('sessionId');
+            } catch (e) {
+                // ignore storage errors
+            }
+            window.location.href = 'dashboard.html';
         }
 
         // Check for existing valid session on page load
@@ -686,6 +699,12 @@
                 updateSoundUI();
             }
         }, { once: true });
+
+        // Attach guest view click
+        const guestLinkEl = document.getElementById('guestViewLink');
+        if (guestLinkEl) {
+            guestLinkEl.addEventListener('click', (e) => { e.preventDefault(); enterGuestMode(); });
+        }
     })();
 </script>
 </body>
