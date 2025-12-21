@@ -394,6 +394,15 @@
                 const info = await res.json();
                 isLoggedIn = true;
                 userRole = info.role;
+                // ensure stored role (session/local) matches server role
+                try {
+                    const storedRole = (SessionManager && typeof SessionManager.getRole === 'function') ? SessionManager.getRole() : null;
+                    const tokenStoredInLocal = (SessionManager && SessionManager.AUTH_TOKEN_KEY) ? !!localStorage.getItem(SessionManager.AUTH_TOKEN_KEY) : false;
+                    if (storedRole !== info.role && SessionManager && typeof SessionManager.saveAuth === 'function') {
+                        SessionManager.saveAuth(authToken, info.role, tokenStoredInLocal);
+                        console.debug('Synced stored role to', info.role);
+                    }
+                } catch (e) { console.warn('Role sync failed', e); }
                     console.debug('User validated:', info);
                     // show admin link if admin
                     try { document.getElementById('adminLink').style.display = (userRole === 'admin') ? 'inline-block' : 'none'; } catch(e) { console.warn('adminLink missing', e); }
