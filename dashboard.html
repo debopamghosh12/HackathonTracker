@@ -498,8 +498,9 @@
             adminButtons += `<button class="action-btn delete-btn" onclick="deleteHack('${hack._id}')"><i class="fas fa-trash-alt"></i></button>`;
         }
 
-        const certBtn = hack.certificate ? `<a href="${hack.certificate}" target="_blank" class="proof-btn"><i class="fas fa-certificate"></i> Cert</a>` : '';
-        const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : '';
+        const canSeeLink = isLoggedIn && (userRole === 'member' || userRole === 'editor' || userRole === 'admin');
+        const certBtn = (canSeeLink && hack.certificate) ? `<a href="${hack.certificate}" target="_blank" class="proof-btn"><i class="fas fa-certificate"></i> Cert</a>` : (hack.certificate ? `<span class="proof-btn" style="opacity:0.5;cursor:default">Cert (login)</span>` : '');
+        const photoBtn = (canSeeLink && hack.photos) ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : (hack.photos ? `<span class="proof-btn" style="opacity:0.5;cursor:default">Photos (login)</span>` : '');
         const calLink = generateCalendarLink(hack.name, hack.startDate, hack.endDate, hack.location);
 
         // --- 👇 IMPROVED TEAM CODE DESIGN ---
@@ -542,7 +543,7 @@
                 </div>
                 
                 <div class="btn-group">
-                    <a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a>
+                    ${ canSeeLink ? `<a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a>` : `<a href="login.html" class="visit-btn" title="Login to view registration link">View (login)</a>` }
                     <a href="report.html?id=${hack._id}" target="_blank" class="visit-btn report-btn"><i class="fas fa-file-alt"></i> REPORT</a>
                     ${adminButtons}
                 </div>

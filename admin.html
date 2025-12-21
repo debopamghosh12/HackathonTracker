@@ -41,9 +41,19 @@
       </form>
     </div>
 
+    <div style="margin-top:12px;color:#999999">Tip: New users who registered will be created with role <strong>member</strong>. Use the Role selector or the Approve button to grant admin access to users who requested it.</div>
     <div id="listArea" style="margin-top:18px">
       <table id="userTable">
-        <thead><tr><th>User</th><th>Role</th><th>Change Password</th><th>Actions</th></tr></thead>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Admin Request</th>
+            <th>Last Modified By</th>
+            <th>Change Password</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody></tbody>
       </table>
     </div>
@@ -79,6 +89,8 @@
                   <option value="admin">admin</option>
                 </select>
               </td>
+              <td>${u.requestAdmin ? `<strong style="color:#ffd166">Requested</strong> <button class="btn small" data-user="${u.username}" data-action="approve">Approve</button>` : '<span style="color:#88c">—</span>'}</td>
+              <td>${u.modifiedBy ? u.modifiedBy : '-'}</td>
               <td><input data-user="${u.username}" class="pw-input" placeholder="new password"></td>
               <td class="actions"><button class="btn small" data-user="${u.username}" data-action="save">Save</button><button class="btn danger small" data-user="${u.username}" data-action="delete">Delete</button></td>
             `;
@@ -112,6 +124,14 @@
             pwInput.value = '';
             await loadUsers();
           }catch(e){ alert('Update failed'); }
+        } else if (action === 'approve'){
+          // Approve admin request: set role to admin for user
+          if (!confirm('Grant admin role to ' + user + '?')) return;
+          try{
+            const res = await fetch(API + '/users/' + encodeURIComponent(user), { method: 'PUT', headers: { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ role: 'admin' }) });
+            if (!res.ok) throw new Error('Approve failed');
+            await loadUsers();
+          }catch(e){ alert('Approve failed'); }
         }
       });
 

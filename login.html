@@ -256,11 +256,12 @@
     <div class="modal-backdrop" id="registerBackdrop" role="dialog" aria-modal="true" aria-hidden="true" style="display:none">
         <div class="modal" role="document">
             <h3>CREATE ACCOUNT</h3>
-            <p style="color:#ccc;font-size:13px">Register a new account. New accounts default to role <strong>member</strong>. An admin can upgrade roles later.</p>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+            <p style="color:#ccc;font-size:13px">Register a new account. New accounts default to role <strong>member</strong>. If you need admin access, check the box below to request it — an existing admin must approve and assign the role via the <strong>Users</strong> page.</p>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
                 <input id="regUsername" placeholder="Choose username" style="padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid #222;color:#fff">
                 <input id="regPassword" type="password" placeholder="Password" style="padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid #222;color:#fff">
                 <input id="regPassword2" type="password" placeholder="Confirm password" style="padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid #222;color:#fff">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#ccc;margin-top:6px"><input id="reqAdminChk" type="checkbox" style="width:16px;height:16px;"> Request admin access (for admin review)</label>
                 <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
                     <button id="regCancel" class="btn" style="background:#333;color:#fff;padding:8px 14px">Cancel</button>
                     <button id="regSubmit" class="btn" style="padding:8px 14px">Register</button>
@@ -662,7 +663,8 @@
             if (p !== p2) { regMsg.style.display='block'; regMsg.textContent='Passwords do not match'; return; }
             regSubmit.disabled = true; regSubmit.textContent = 'Registering...';
             try {
-                const res = await fetch(window.API.REGISTER, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+                    const requestAdmin = !!document.getElementById('reqAdminChk') && document.getElementById('reqAdminChk').checked;
+                    const res = await fetch(window.API.REGISTER, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ username: u, password: p, requestAdmin }) });
                 const j = await res.json();
                 if (!res.ok) throw new Error(j.error || 'Register failed');
                 // Auto-login after register

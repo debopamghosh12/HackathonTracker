@@ -42,6 +42,11 @@ const HackathonSchema = new mongoose.Schema({
     link: String,
     certificate: String,
     photos: String
+    ,
+    // Audit
+    createdBy: String,
+    modifiedBy: String,
+    modifiedAt: Date
 });
 
 const Hackathon = mongoose.model('Hackathon', HackathonSchema);
@@ -132,7 +137,7 @@ function writeUsersToFile() {
 // GET all users (admin only) - hide passwords in response
 app.get('/api/users', requireAuth(['admin']), (req, res) => {
     try {
-        const out = USERS.map(u => ({ username: u.username, role: u.role }));
+        const out = USERS.map(u => ({ username: u.username, role: u.role, requestAdmin: !!u.requestAdmin, createdBy: u.createdBy || null, modifiedBy: u.modifiedBy || null, modifiedAt: u.modifiedAt || null }));
         res.json(out);
     } catch (e) { res.status(500).json({ error: 'Failed to read users' }); }
 });
@@ -144,7 +149,8 @@ app.post('/api/users', requireAuth(['admin']), (req, res) => {
         if (!username || !password || !role) return res.status(400).json({ error: 'Missing fields' });
         if (USERS.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
         const hashed = bcrypt.hashSync(password, 10);
-        USERS.push({ username, password: hashed, role });
+        const creator = (req.user && req.user.username) ? req.user.username : 'system';
+        USERS.push({ username, password: hashed, role, createdBy: creator, modifiedBy: creator, modifiedAt: new Date() });
         writeUsersToFile();
         res.json({ username, role });
     } catch (e) { res.status(500).json({ error: 'Failed to create user' }); }
@@ -153,13 +159,17 @@ app.post('/api/users', requireAuth(['admin']), (req, res) => {
 // Public registration - creates user with role 'member' by default
 app.post('/api/register', (req, res) => {
     try {
-        const { username, password } = req.body || {};
+        const { username, password, requestAdmin } = req.body || {};
         if (!username || !password) return res.status(400).json({ error: 'Missing fields' });
         if (USERS.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
         const hashed = bcrypt.hashSync(password, 10);
-        USERS.push({ username, password: hashed, role: 'member' });
+        // Public registrations are created as 'member' by default.
+        // An optional `requestAdmin` boolean is stored so admins can review requests.
+        const userObj = { username, password: hashed, role: 'member' };
+        if (requestAdmin) userObj.requestAdmin = true;
+        USERS.push(userObj);
         writeUsersToFile();
-        res.json({ username, role: 'member' });
+        res.json({ username, role: 'member', requestAdmin: !!requestAdmin });
     } catch (e) { res.status(500).json({ error: 'Failed to register user' }); }
 });
 
@@ -172,6 +182,11 @@ app.put('/api/users/:username', requireAuth(['admin']), (req, res) => {
         if (!user) return res.status(404).json({ error: 'Not found' });
         if (password) user.password = bcrypt.hashSync(password, 10);
         if (role) user.role = role;
+        // record who made the change
+        if (req.user && req.user.username) {
+            user.modifiedBy = req.user.username;
+            user.modifiedAt = new Date();
+        }
         writeUsersToFile();
         res.json({ username: user.username, role: user.role });
     } catch (e) { res.status(500).json({ error: 'Failed to update user' }); }
@@ -183,7 +198,16 @@ app.delete('/api/users/:username', requireAuth(['admin']), (req, res) => {
         const target = req.params.username;
         const idx = USERS.findIndex(u => u.username === target);
         if (idx === -1) return res.status(404).json({ error: 'Not found' });
-        USERS.splice(idx, 1);
+        const removed = USERS.splice(idx, 1)[0];
+        // Optionally log deletion metadata to an audit file
+        try {
+            const auditEntry = { action: 'delete_user', user: removed.username, by: req.user && req.user.username, at: new Date() };
+            const auditPath = __dirname + '/data/audit.log.json';
+            let audits = [];
+            try { audits = JSON.parse(fs.readFileSync(auditPath, 'utf8') || '[]'); } catch(e) { audits = []; }
+            audits.push(auditEntry);
+            fs.writeFileSync(auditPath, JSON.stringify(audits, null, 2), 'utf8');
+        } catch (e) { /* ignore audit errors */ }
         writeUsersToFile();
         res.json({ message: 'Deleted' });
     } catch (e) { res.status(500).json({ error: 'Failed to delete user' }); }
@@ -209,7 +233,8 @@ app.get('/api/hackathons/:id', async (req, res) => {
 // 3. ADD NEW (requires editor/admin)
 app.post('/api/hackathons', requireAuth(['admin','editor']), async (req, res) => {
     try {
-        const newHack = new Hackathon(req.body);
+        const creator = (req.user && req.user.username) ? req.user.username : 'system';
+        const newHack = new Hackathon(Object.assign({}, req.body, { createdBy: creator, modifiedBy: creator, modifiedAt: new Date() }));
         await newHack.save();
         res.json({ message: "Saved!", data: newHack });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -224,7 +249,9 @@ app.delete('/api/hackathons/:id', requireAuth(['admin']), async (req, res) => {
 // 5. UPDATE (requires editor/admin)
 app.put('/api/hackathons/:id', requireAuth(['admin','editor']), async (req, res) => {
     try {
-        const updatedHack = await Hackathon.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const modifier = (req.user && req.user.username) ? req.user.username : 'system';
+        const bodyWithMeta = Object.assign({}, req.body, { modifiedBy: modifier, modifiedAt: new Date() });
+        const updatedHack = await Hackathon.findByIdAndUpdate(req.params.id, bodyWithMeta, { new: true });
         res.json(updatedHack);
     } catch (err) { res.status(500).json({ error: "Update failed" }); }
 });

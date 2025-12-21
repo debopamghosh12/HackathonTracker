@@ -14,9 +14,15 @@
     <script src="assets/js/sessionManager.js"></script>
     <script src="assets/js/config.js"></script>
     <script>
-        if (!SessionManager.isAuthenticated()) {
-            window.location.href = "login.html";
-        }
+        // Only admins are allowed to add events. Redirect others.
+        (function(){
+            if (!SessionManager.isAuthenticated()) return window.location.href = 'login.html';
+            const role = SessionManager.getRole();
+            if (role !== 'admin') {
+                alert('Only admins can add events. Redirecting to dashboard.');
+                return window.location.href = 'dashboard.html';
+            }
+        })();
     </script>
 
     <style>
