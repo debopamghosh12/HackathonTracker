@@ -103,7 +103,8 @@ function generateToken() {
 }
 
 function requireAuth(allowedRoles = []) {
-    return (req, res, next) => {
+    // return async middleware so we can refresh role from DB if it changed
+    return async (req, res, next) => {
         const auth = req.headers.authorization;
         if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
         const token = auth.slice(7);
@@ -112,6 +113,17 @@ function requireAuth(allowedRoles = []) {
         if (session.expires < Date.now()) {
             SESSIONS.delete(token);
             return res.status(401).json({ error: 'Session expired' });
+        }
+        try {
+            // Refresh role from DB in case it was changed externally
+            const dbUser = await User.findOne({ username: session.username }).lean();
+            if (dbUser && dbUser.role && dbUser.role !== session.role) {
+                session.role = dbUser.role;
+                SESSIONS.set(token, session);
+            }
+        } catch (err) {
+            // ignore DB errors and proceed with existing session.role
+            console.warn('Role refresh failed', err && err.message);
         }
         if (allowedRoles.length && !allowedRoles.includes(session.role)) return res.status(403).json({ error: 'Forbidden' });
         // attach user
@@ -136,13 +148,23 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { res.status(500).json({ error: 'Login failed' }); }
 });
 
-app.get('/api/validate', (req, res) => {
+app.get('/api/validate', async (req, res) => {
     const auth = req.headers.authorization;
     if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
     const token = auth.slice(7);
     const session = SESSIONS.get(token);
     if (!session) return res.status(401).json({ error: 'Invalid token' });
     if (session.expires < Date.now()) { SESSIONS.delete(token); return res.status(401).json({ error: 'Session expired' }); }
+    try {
+        // ensure we return the latest role from DB if it changed
+        const dbUser = await User.findOne({ username: session.username }).lean();
+        if (dbUser && dbUser.role && dbUser.role !== session.role) {
+            session.role = dbUser.role;
+            SESSIONS.set(token, session);
+        }
+    } catch (err) {
+        console.warn('Validate role refresh failed', err && err.message);
+    }
     res.json({ username: session.username, role: session.role, expires: session.expires });
 });
 
