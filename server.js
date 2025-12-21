@@ -54,30 +54,49 @@ const Hackathon = mongoose.model('Hackathon', HackathonSchema);
 // --- ROUTES ---
 
 // --- SIMPLE AUTH / SESSIONS (In-memory) ---
-let USERS = [];
-try {
-    const raw = fs.readFileSync(__dirname + '/data/users.json', 'utf8');
-    USERS = JSON.parse(raw);
-} catch (e) {
-    console.warn('No users.json found or invalid, proceeding with empty user list');
-}
-
-// Migrate plaintext passwords to bcrypt-hashed on startup
-let migrated = false;
-for (let u of USERS) {
-    if (!u.password) continue;
-    // if not hashed (bcrypt hashes start with $2a$ or $2b$)
-    if (typeof u.password === 'string' && !u.password.startsWith('$2')) {
-        const hashed = bcrypt.hashSync(u.password, 10);
-        u.password = hashed;
-        migrated = true;
-    }
-}
-if (migrated) {
-    try { fs.writeFileSync(__dirname + '/data/users.json', JSON.stringify(USERS, null, 2), 'utf8'); } catch (e) { console.error('Failed writing migrated users.json', e); }
-}
-
 const SESSIONS = new Map(); // token => { username, role, expires }
+
+// --- USER MODEL (MongoDB) ---
+const UserSchema = new mongoose.Schema({
+    username: { type: String, unique: true, required: true },
+    password: String,
+    role: { type: String, default: 'member' },
+    requestAdmin: { type: Boolean, default: false },
+    createdBy: String,
+    modifiedBy: String,
+    modifiedAt: Date
+});
+const User = mongoose.model('User', UserSchema);
+
+// If MongoDB has no users yet, optionally migrate from data/users.json (local file)
+(async function migrateUsers() {
+    try {
+        const count = await User.countDocuments();
+        if (count === 0) {
+            const path = __dirname + '/data/users.json';
+            if (fs.existsSync(path)) {
+                const raw = fs.readFileSync(path, 'utf8');
+                const arr = JSON.parse(raw || '[]');
+                for (const u of arr) {
+                    try {
+                        await User.create({
+                            username: u.username,
+                            password: u.password,
+                            role: u.role || 'member',
+                            requestAdmin: !!u.requestAdmin,
+                            createdBy: u.username,
+                            modifiedBy: u.username,
+                            modifiedAt: new Date()
+                        });
+                    } catch (e) {
+                        // ignore duplicates or errors
+                    }
+                }
+                console.log('✅ Migrated users.json into MongoDB (User collection)');
+            }
+        }
+    } catch (e) { console.warn('User migration failed', e); }
+})();
 
 function generateToken() {
     return crypto.randomBytes(32).toString('hex');
@@ -102,17 +121,19 @@ function requireAuth(allowedRoles = []) {
 }
 
 // Login endpoint
-app.post('/api/login', (req, res) => {
-    const { username, password, remember } = req.body || {};
-    if (!username || !password) return res.status(400).json({ error: 'Missing credentials' });
-    const user = USERS.find(u => u.username === username);
-    if (!user) return res.status(401).json({ error: 'Invalid username or password' });
-    const ok = bcrypt.compareSync(password, user.password);
-    if (!ok) return res.status(401).json({ error: 'Invalid username or password' });
-    const token = generateToken();
-    const expires = Date.now() + (remember ? 1000 * 60 * 60 * 24 * 30 : 1000 * 60 * 60 * 8); // 30 days or 8 hours
-    SESSIONS.set(token, { username: user.username, role: user.role, expires });
-    res.json({ token, role: user.role, expires });
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password, remember } = req.body || {};
+        if (!username || !password) return res.status(400).json({ error: 'Missing credentials' });
+        const user = await User.findOne({ username });
+        if (!user) return res.status(401).json({ error: 'Invalid username or password' });
+        const ok = bcrypt.compareSync(password, user.password);
+        if (!ok) return res.status(401).json({ error: 'Invalid username or password' });
+        const token = generateToken();
+        const expires = Date.now() + (remember ? 1000 * 60 * 60 * 24 * 30 : 1000 * 60 * 60 * 8); // 30 days or 8 hours
+        SESSIONS.set(token, { username: user.username, role: user.role, expires });
+        res.json({ token, role: user.role, expires });
+    } catch (e) { res.status(500).json({ error: 'Login failed' }); }
 });
 
 app.get('/api/validate', (req, res) => {
@@ -126,80 +147,63 @@ app.get('/api/validate', (req, res) => {
 });
 
 // --- USER MANAGEMENT (admin only) ---
-function writeUsersToFile() {
-    try {
-        fs.writeFileSync(__dirname + '/data/users.json', JSON.stringify(USERS, null, 2), 'utf8');
-    } catch (e) {
-        console.error('Failed to write users.json', e);
-    }
-}
-
+// User CRUD is now backed by MongoDB (see User model above)
 // GET all users (admin only) - hide passwords in response
-app.get('/api/users', requireAuth(['admin']), (req, res) => {
+app.get('/api/users', requireAuth(['admin']), async (req, res) => {
     try {
-        const out = USERS.map(u => ({ username: u.username, role: u.role, requestAdmin: !!u.requestAdmin, createdBy: u.createdBy || null, modifiedBy: u.modifiedBy || null, modifiedAt: u.modifiedAt || null }));
-        res.json(out);
+        const users = await User.find({}, 'username role requestAdmin createdBy modifiedBy modifiedAt').lean();
+        res.json(users);
     } catch (e) { res.status(500).json({ error: 'Failed to read users' }); }
 });
 
 // CREATE user (admin)
-app.post('/api/users', requireAuth(['admin']), (req, res) => {
+app.post('/api/users', requireAuth(['admin']), async (req, res) => {
     try {
         const { username, password, role } = req.body || {};
         if (!username || !password || !role) return res.status(400).json({ error: 'Missing fields' });
-        if (USERS.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
+        const exists = await User.findOne({ username });
+        if (exists) return res.status(409).json({ error: 'User exists' });
         const hashed = bcrypt.hashSync(password, 10);
         const creator = (req.user && req.user.username) ? req.user.username : 'system';
-        USERS.push({ username, password: hashed, role, createdBy: creator, modifiedBy: creator, modifiedAt: new Date() });
-        writeUsersToFile();
-        res.json({ username, role });
+        const created = await User.create({ username, password: hashed, role, createdBy: creator, modifiedBy: creator, modifiedAt: new Date() });
+        res.json({ username: created.username, role: created.role });
     } catch (e) { res.status(500).json({ error: 'Failed to create user' }); }
 });
 
 // Public registration - creates user with role 'member' by default
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
     try {
         const { username, password, requestAdmin } = req.body || {};
         if (!username || !password) return res.status(400).json({ error: 'Missing fields' });
-        if (USERS.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
+        const exists = await User.findOne({ username });
+        if (exists) return res.status(409).json({ error: 'User exists' });
         const hashed = bcrypt.hashSync(password, 10);
-        // Public registrations are created as 'member' by default.
-        // An optional `requestAdmin` boolean is stored so admins can review requests.
-        const userObj = { username, password: hashed, role: 'member' };
-        if (requestAdmin) userObj.requestAdmin = true;
-        USERS.push(userObj);
-        writeUsersToFile();
-        res.json({ username, role: 'member', requestAdmin: !!requestAdmin });
+        const u = await User.create({ username, password: hashed, role: 'member', requestAdmin: !!requestAdmin, createdBy: username, modifiedBy: username, modifiedAt: new Date() });
+        res.json({ username: u.username, role: u.role, requestAdmin: !!requestAdmin });
     } catch (e) { res.status(500).json({ error: 'Failed to register user' }); }
 });
 
 // UPDATE user (admin)
-app.put('/api/users/:username', requireAuth(['admin']), (req, res) => {
+app.put('/api/users/:username', requireAuth(['admin']), async (req, res) => {
     try {
         const target = req.params.username;
         const { password, role } = req.body || {};
-        const user = USERS.find(u => u.username === target);
+        const user = await User.findOne({ username: target });
         if (!user) return res.status(404).json({ error: 'Not found' });
         if (password) user.password = bcrypt.hashSync(password, 10);
         if (role) user.role = role;
-        // record who made the change
-        if (req.user && req.user.username) {
-            user.modifiedBy = req.user.username;
-            user.modifiedAt = new Date();
-        }
-        writeUsersToFile();
+        if (req.user && req.user.username) { user.modifiedBy = req.user.username; user.modifiedAt = new Date(); }
+        await user.save();
         res.json({ username: user.username, role: user.role });
     } catch (e) { res.status(500).json({ error: 'Failed to update user' }); }
 });
 
 // DELETE user (admin)
-app.delete('/api/users/:username', requireAuth(['admin']), (req, res) => {
+app.delete('/api/users/:username', requireAuth(['admin']), async (req, res) => {
     try {
         const target = req.params.username;
-        const idx = USERS.findIndex(u => u.username === target);
-        if (idx === -1) return res.status(404).json({ error: 'Not found' });
-        const removed = USERS.splice(idx, 1)[0];
-        // Optionally log deletion metadata to an audit file
+        const removed = await User.findOneAndDelete({ username: target });
+        if (!removed) return res.status(404).json({ error: 'Not found' });
         try {
             const auditEntry = { action: 'delete_user', user: removed.username, by: req.user && req.user.username, at: new Date() };
             const auditPath = __dirname + '/data/audit.log.json';
@@ -208,7 +212,6 @@ app.delete('/api/users/:username', requireAuth(['admin']), (req, res) => {
             audits.push(auditEntry);
             fs.writeFileSync(auditPath, JSON.stringify(audits, null, 2), 'utf8');
         } catch (e) { /* ignore audit errors */ }
-        writeUsersToFile();
         res.json({ message: 'Deleted' });
     } catch (e) { res.status(500).json({ error: 'Failed to delete user' }); }
 });

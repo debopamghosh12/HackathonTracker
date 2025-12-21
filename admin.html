@@ -1,159 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>User Management - Admin</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="assets/js/sessionManager.js"></script>
-  <style>
-    body{font-family:Poppins, sans-serif;background:#050505;color:#fff;padding:24px}
-    .card{background:rgba(255,255,255,0.03);padding:18px;border-radius:12px;border:1px solid rgba(0,212,255,0.06);max-width:900px;margin:0 auto}
-    h2{font-family:Orbitron, sans-serif;color:#00ff88}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
-    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left}
-    input,select{padding:8px;border-radius:6px;border:1px solid #333;background:#0a0a0a;color:#fff}
-    .actions{display:flex;gap:8px}
-    .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
-    .btn.primary{background:linear-gradient(90deg,#00ff88,#00d4ff);color:#000}
-    .btn.danger{background:#ff4444;color:#fff}
-    .small{font-size:13px;padding:6px 8px}
-    .top-actions{display:flex;gap:10px;align-items:center}
-  </style>
+  <title>Admin Removed</title>
+  <style>body{font-family:Poppins,Arial,Helvetica,sans-serif;background:#101216;color:#e6eef8;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;padding:20px} .box{max-width:720px;background:#0b0f14;padding:24px;border-radius:12px;border:1px solid #18202a}</style>
 </head>
 <body>
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h2><i class="fas fa-users-cog"></i> User Management</h2>
-      <div>
-        <button id="backBtn" class="btn small">← Back</button>
-      </div>
-    </div>
-
-    <p style="color:#aaa">Create, edit or remove users and assign roles. (admin only)</p>
-
-    <div style="margin-top:12px">
-      <form id="addForm" style="display:flex;gap:8px;flex-wrap:wrap">
-        <input id="newUser" placeholder="username" required>
-        <input id="newPass" type="password" placeholder="password" required>
-        <select id="newRole"><option value="member">member</option><option value="editor">editor</option><option value="admin">admin</option></select>
-        <button class="btn primary" type="submit">Add User</button>
-      </form>
-    </div>
-
-    <div style="margin-top:12px;color:#999999">Tip: New users who registered will be created with role <strong>member</strong>. Use the Role selector or the Approve button to grant admin access to users who requested it.</div>
-    <div id="listArea" style="margin-top:18px">
-      <table id="userTable">
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Role</th>
-            <th>Admin Request</th>
-            <th>Last Modified By</th>
-            <th>Change Password</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+  <div class="box">
+    <h2>Admin UI removed</h2>
+    <p>The in-browser admin UI has been removed. User data is now stored in MongoDB so you can manage users directly with MongoDB Compass or via the server API.</p>
+    <ul>
+      <li>Connect to your MongoDB instance and open the <strong>users</strong> collection (database used by this app) to view/edit accounts.</li>
+      <li>To add an admin manually, insert a document with fields: <code>username</code>, <code>password</code> (bcrypt hash), and <code>role: "admin"</code>.</li>
+      <li>To log in via the site, use the credentials stored in the DB and then access pages as usual.</li>
+    </ul>
+    <p>If you need, I can add a small management API or a secure admin UI later.</p>
+    <p><a href="dashboard.html">Return to Dashboard</a></p>
   </div>
-
-  <script>
-    (async function(){
-      // Auth check
-      if (!SessionManager.isAuthenticated()) return window.location.href = 'login.html';
-      const role = SessionManager.getRole();
-      if (role !== 'admin') return alert('Admin only') || (window.location.href = 'dashboard.html');
-      const token = SessionManager.getToken();
-
-      const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000/api' : 'https://hackathontracker.onrender.com/api';
-
-      const tbody = document.querySelector('#userTable tbody');
-      const addForm = document.getElementById('addForm');
-
-      async function loadUsers(){
-        try{
-          const res = await fetch(API + '/users', { headers: { 'Authorization': 'Bearer ' + token } });
-          if (!res.ok) throw new Error('Failed');
-          const data = await res.json();
-          tbody.innerHTML = '';
-          data.forEach(u => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${u.username}</td>
-              <td>
-                <select data-user="${u.username}" class="role-select">
-                  <option value="member">member</option>
-                  <option value="editor">editor</option>
-                  <option value="admin">admin</option>
-                </select>
-              </td>
-              <td>${u.requestAdmin ? `<strong style="color:#ffd166">Requested</strong> <button class="btn small" data-user="${u.username}" data-action="approve">Approve</button>` : '<span style="color:#88c">—</span>'}</td>
-              <td>${u.modifiedBy ? u.modifiedBy : '-'}</td>
-              <td><input data-user="${u.username}" class="pw-input" placeholder="new password"></td>
-              <td class="actions"><button class="btn small" data-user="${u.username}" data-action="save">Save</button><button class="btn danger small" data-user="${u.username}" data-action="delete">Delete</button></td>
-            `;
-            tbody.appendChild(tr);
-            const sel = tr.querySelector('.role-select'); sel.value = u.role;
-          });
-        }catch(e){ console.error(e); alert('Failed to load users'); }
-      }
-
-      tbody.addEventListener('click', async (ev) => {
-        const btn = ev.target.closest('button'); if (!btn) return;
-        const user = btn.dataset.user; const action = btn.dataset.action;
-        if (action === 'delete'){
-          if (!confirm('Delete user ' + user + '?')) return;
-          try{
-            const res = await fetch(API + '/users/' + encodeURIComponent(user), { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
-            if (!res.ok) throw new Error('Delete failed');
-            await loadUsers();
-          }catch(e){ alert('Delete failed'); }
-        } else if (action === 'save'){
-          // Find row inputs
-          const row = btn.closest('tr');
-          const roleSel = row.querySelector('.role-select');
-          const pwInput = row.querySelector('.pw-input');
-          const body = {};
-          if (pwInput && pwInput.value) body.password = pwInput.value;
-          if (roleSel) body.role = roleSel.value;
-          try{
-            const res = await fetch(API + '/users/' + encodeURIComponent(user), { method: 'PUT', headers: { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
-            if (!res.ok) throw new Error('Update failed');
-            pwInput.value = '';
-            await loadUsers();
-          }catch(e){ alert('Update failed'); }
-        } else if (action === 'approve'){
-          // Approve admin request: set role to admin for user
-          if (!confirm('Grant admin role to ' + user + '?')) return;
-          try{
-            const res = await fetch(API + '/users/' + encodeURIComponent(user), { method: 'PUT', headers: { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ role: 'admin' }) });
-            if (!res.ok) throw new Error('Approve failed');
-            await loadUsers();
-          }catch(e){ alert('Approve failed'); }
-        }
-      });
-
-      addForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('newUser').value.trim();
-        const password = document.getElementById('newPass').value.trim();
-        const role = document.getElementById('newRole').value;
-        if (!username || !password) return alert('Provide username and password');
-        try{
-          const res = await fetch(API + '/users', { method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ username, password, role }) });
-          if (!res.ok) { const j = await res.json().catch(()=>({})); throw new Error(j.error||'Failed'); }
-          document.getElementById('newUser').value = '';
-          document.getElementById('newPass').value = '';
-          await loadUsers();
-        }catch(e){ alert('Create failed: ' + (e.message||'')); }
-      });
-
-      document.getElementById('backBtn').addEventListener('click', ()=> window.location.href='dashboard.html');
-
-      await loadUsers();
-    })();
-  </script>
 </body>
 </html>
