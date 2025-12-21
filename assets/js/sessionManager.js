@@ -195,3 +195,10 @@ const SessionManager = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = SessionManager;
 }
+
+// Ensure browser pages can access SessionManager as a window property
+try {
+    if (typeof window !== 'undefined') {
+        window.SessionManager = SessionManager;
+    }
+} catch (e) { /* ignore when window not present */ }
