@@ -246,11 +246,15 @@
             };
 
             try { 
-                await fetch(API_URL, { 
+                const headers = { "Content-Type": "application/json" };
+                const token = SessionManager.getToken && SessionManager.getToken();
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                const res = await fetch(API_URL, { 
                     method: "POST", 
-                    headers: { "Content-Type": "application/json" }, 
+                    headers, 
                     body: JSON.stringify(formData) 
-                }); 
+                });
+                if (!res.ok) throw new Error('Save failed');
                 window.location.href = "dashboard.html"; // Redirect on success
             } 
             catch (err) { 

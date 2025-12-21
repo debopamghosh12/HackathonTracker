@@ -233,6 +233,7 @@
         <div class="nav-left">
             <a href="javascript:void(0)" onclick="goToAdd()" class="nav-btn"><i class="fas fa-plus"></i> ADD EVENT</a>
             <a href="team.html" class="team-btn"><i class="fas fa-users"></i> TEAM</a>
+            <a href="admin.html" id="adminLink" class="nav-btn" style="display:none"><i class="fas fa-user-shield"></i> USERS</a>
         </div>
         
         <div style="display:flex; align-items:center; gap: 10px;">
@@ -369,6 +370,13 @@
         const modal = document.getElementById('editModal');
         const isLoggedIn = SessionManager.isAuthenticated();
         const isGuest = sessionStorage.getItem('guestMode') === 'true';
+        const userRole = SessionManager.getRole();
+        const authToken = SessionManager.getToken();
+        const isAdmin = userRole === 'admin';
+        const isEditor = isAdmin || userRole === 'editor';
+
+        // Show admin link when admin
+        try { if (isAdmin) document.getElementById('adminLink').style.display = 'inline-block'; } catch(e) {}
         let allHackathons = [];
 
         //if (!isLoggedIn) { window.location.href = 'login.html'; }
@@ -455,9 +463,13 @@
         let statusText = vacancy > 0 ? `<i class="fas fa-check-circle" style="color:#00ff88"></i> ${vacancy} Slot(s) Open` : `<i class="fas fa-times-circle" style="color:#ff4444"></i> Team Full`;
         let statusColorClass = vacancy > 0 ? 'status-open' : 'status-full';
 
-        const adminButtons = isLoggedIn ? `
-            <button class="action-btn edit-btn" onclick="openEdit('${hack._id}', '${hack.name}', '${hack.startDate}', '${hack.endDate}', '${hack.registered}', '${currentStatus}', '${hack.teamMembers || ''}', '${hack.certificate || ''}', '${hack.photos || ''}')"><i class="fas fa-pencil-alt"></i></button>
-            <button class="action-btn delete-btn" onclick="deleteHack('${hack._id}')"><i class="fas fa-trash-alt"></i></button>` : '';
+        let adminButtons = '';
+        if (isLoggedIn && isEditor) {
+            adminButtons += `<button class="action-btn edit-btn" onclick="openEdit('${hack._id}', '${hack.name}', '${hack.startDate}', '${hack.endDate}', '${hack.registered}', '${currentStatus}', '${hack.teamMembers || ''}', '${hack.certificate || ''}', '${hack.photos || ''}')"><i class="fas fa-pencil-alt"></i></button>`;
+        }
+        if (isLoggedIn && isAdmin) {
+            adminButtons += `<button class="action-btn delete-btn" onclick="deleteHack('${hack._id}')"><i class="fas fa-trash-alt"></i></button>`;
+        }
 
         const certBtn = hack.certificate ? `<a href="${hack.certificate}" target="_blank" class="proof-btn"><i class="fas fa-certificate"></i> Cert</a>` : '';
         const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : '';
@@ -559,11 +571,20 @@
         });
     }, 1000);
 }
-        async function deleteHack(id) { if(!confirm("Are you sure?")) return; try { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); loadHackathons(); } catch (err) { console.error('Delete error:', err); alert('Failed to delete hackathon'); } }
+        async function deleteHack(id) { if(!confirm("Are you sure?")) return; try { const headers = {};
+            if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE', headers });
+            if (!res.ok) throw new Error('Delete failed');
+            loadHackathons();
+        } catch (err) { console.error('Delete error:', err); alert('Failed to delete hackathon: ' + (err.message || '')); } }
         function openEdit(id, name, date, endDate, reg, status, members, cert, photos) { document.getElementById('edit-id').value = id; document.getElementById('edit-name').value = name; document.getElementById('edit-date').value = date; document.getElementById('edit-end-date').value = endDate; document.getElementById('edit-members').value = members; document.getElementById('edit-reg').value = reg; document.getElementById('edit-status').value = status; document.getElementById('edit-cert').value = cert; document.getElementById('edit-photos').value = photos; modal.style.display = 'flex'; }
         function closeModal() { modal.style.display = 'none'; }
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'flex') closeModal(); });
-        async function saveEdit() { const id = document.getElementById('edit-id').value; const status = document.getElementById('edit-status').value; try { if (status === "Winner") triggerConfetti(); const updatedData = { name: document.getElementById('edit-name').value, startDate: document.getElementById('edit-date').value, endDate: document.getElementById('edit-end-date').value, teamMembers: document.getElementById('edit-members').value, registered: document.getElementById('edit-reg').value, currentStatus: status, certificate: document.getElementById('edit-cert').value, photos: document.getElementById('edit-photos').value }; const res = await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) }); if (!res.ok) throw new Error('Update failed'); closeModal(); loadHackathons(); } catch (err) { console.error('Save error:', err); alert('Failed to save changes'); } }
+        async function saveEdit() { const id = document.getElementById('edit-id').value; const status = document.getElementById('edit-status').value; try { if (status === "Winner") triggerConfetti(); const updatedData = { name: document.getElementById('edit-name').value, startDate: document.getElementById('edit-date').value, endDate: document.getElementById('edit-end-date').value, teamMembers: document.getElementById('edit-members').value, registered: document.getElementById('edit-reg').value, currentStatus: status, certificate: document.getElementById('edit-cert').value, photos: document.getElementById('edit-photos').value };
+            const headers = { 'Content-Type': 'application/json' };
+            if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+            const res = await fetch(`${API_URL}/${id}`, { method: 'PUT', headers, body: JSON.stringify(updatedData) });
+            if (!res.ok) throw new Error('Update failed'); closeModal(); loadHackathons(); } catch (err) { console.error('Save error:', err); alert('Failed to save changes: ' + (err.message || '')); } }
         
         loadHackathons();
     </script>
