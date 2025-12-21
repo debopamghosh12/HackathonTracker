@@ -226,6 +226,7 @@
 
             <div class="links">
                 <a href="#" class="back-link" id="guestViewLink">Guest View →</a>
+                <a href="#" id="registerLink" class="back-link">Register</a>
                 <a href="#" id="forgotLink" class="back-link">Lost Key?</a>
             </div>
 
@@ -250,6 +251,23 @@
       </div>
     </div>
   </div>
+
+    <div class="modal-backdrop" id="registerBackdrop" role="dialog" aria-modal="true" aria-hidden="true" style="display:none">
+        <div class="modal" role="document">
+            <h3>CREATE ACCOUNT</h3>
+            <p style="color:#ccc;font-size:13px">Register a new account. New accounts default to role <strong>member</strong>. An admin can upgrade roles later.</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+                <input id="regUsername" placeholder="Choose username" style="padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid #222;color:#fff">
+                <input id="regPassword" type="password" placeholder="Password" style="padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid #222;color:#fff">
+                <input id="regPassword2" type="password" placeholder="Confirm password" style="padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid #222;color:#fff">
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+                    <button id="regCancel" class="btn" style="background:#333;color:#fff;padding:8px 14px">Cancel</button>
+                    <button id="regSubmit" class="btn" style="padding:8px 14px">Register</button>
+                </div>
+                <div id="regMsg" style="color:#f88;font-size:13px;display:none"></div>
+            </div>
+        </div>
+    </div>
 
   <script>
     (function(){
@@ -616,6 +634,47 @@
         forgotLink.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
         modalClose.addEventListener('click', () => { closeModal(); });
         modalBackdrop.addEventListener('click', (e) => { if(e.target === modalBackdrop) closeModal(); });
+
+        // --- Registration modal logic ---
+        const registerLink = document.getElementById('registerLink');
+        const registerBackdrop = document.getElementById('registerBackdrop');
+        const regCancel = document.getElementById('regCancel');
+        const regSubmit = document.getElementById('regSubmit');
+        const regUsername = document.getElementById('regUsername');
+        const regPassword = document.getElementById('regPassword');
+        const regPassword2 = document.getElementById('regPassword2');
+        const regMsg = document.getElementById('regMsg');
+
+        function openRegister(){ registerBackdrop.style.display = 'flex'; registerBackdrop.setAttribute('aria-hidden','false'); regUsername.focus(); }
+        function closeRegister(){ registerBackdrop.style.display = 'none'; registerBackdrop.setAttribute('aria-hidden','true'); regMsg.style.display='none'; }
+
+        registerLink && registerLink.addEventListener('click', (e) => { e.preventDefault(); openRegister(); });
+        regCancel && regCancel.addEventListener('click', (e) => { e.preventDefault(); closeRegister(); });
+        registerBackdrop && registerBackdrop.addEventListener('click', (e) => { if (e.target === registerBackdrop) closeRegister(); });
+
+        regSubmit && regSubmit.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const u = (regUsername.value || '').trim();
+            const p = (regPassword.value || '').trim();
+            const p2 = (regPassword2.value || '').trim();
+            if (!u || !p) { regMsg.style.display='block'; regMsg.textContent='Provide username and password'; return; }
+            if (p !== p2) { regMsg.style.display='block'; regMsg.textContent='Passwords do not match'; return; }
+            regSubmit.disabled = true; regSubmit.textContent = 'Registering...';
+            try {
+                const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+                const j = await res.json();
+                if (!res.ok) throw new Error(j.error || 'Register failed');
+                // Auto-login after register
+                const loginRes = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ username: u, password: p, remember: true }) });
+                const loginJson = await loginRes.json();
+                if (!loginRes.ok) throw new Error(loginJson.error || 'Login failed after register');
+                if (window.SessionManager && typeof SessionManager.saveAuth === 'function') SessionManager.saveAuth(loginJson.token, loginJson.role, true);
+                closeRegister();
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                regMsg.style.display='block'; regMsg.textContent = err.message || 'Registration failed';
+            } finally { regSubmit.disabled = false; regSubmit.textContent = 'Register'; }
+        });
 
         passInput.focus();
         setTimeout(() => container.classList.add('enter'), 100);

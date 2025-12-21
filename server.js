@@ -14,6 +14,7 @@ app.use(express.static(__dirname));
 
 const fs = require('fs');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 
 // --- DATABASE CONNECTION ---
 mongoose.connect(process.env.MONGO_URL)
@@ -56,6 +57,21 @@ try {
     console.warn('No users.json found or invalid, proceeding with empty user list');
 }
 
+// Migrate plaintext passwords to bcrypt-hashed on startup
+let migrated = false;
+for (let u of USERS) {
+    if (!u.password) continue;
+    // if not hashed (bcrypt hashes start with $2a$ or $2b$)
+    if (typeof u.password === 'string' && !u.password.startsWith('$2')) {
+        const hashed = bcrypt.hashSync(u.password, 10);
+        u.password = hashed;
+        migrated = true;
+    }
+}
+if (migrated) {
+    try { fs.writeFileSync(__dirname + '/data/users.json', JSON.stringify(USERS, null, 2), 'utf8'); } catch (e) { console.error('Failed writing migrated users.json', e); }
+}
+
 const SESSIONS = new Map(); // token => { username, role, expires }
 
 function generateToken() {
@@ -85,7 +101,9 @@ app.post('/api/login', (req, res) => {
     const { username, password, remember } = req.body || {};
     if (!username || !password) return res.status(400).json({ error: 'Missing credentials' });
     const user = USERS.find(u => u.username === username);
-    if (!user || user.password !== password) return res.status(401).json({ error: 'Invalid username or password' });
+    if (!user) return res.status(401).json({ error: 'Invalid username or password' });
+    const ok = bcrypt.compareSync(password, user.password);
+    if (!ok) return res.status(401).json({ error: 'Invalid username or password' });
     const token = generateToken();
     const expires = Date.now() + (remember ? 1000 * 60 * 60 * 24 * 30 : 1000 * 60 * 60 * 8); // 30 days or 8 hours
     SESSIONS.set(token, { username: user.username, role: user.role, expires });
@@ -125,10 +143,24 @@ app.post('/api/users', requireAuth(['admin']), (req, res) => {
         const { username, password, role } = req.body || {};
         if (!username || !password || !role) return res.status(400).json({ error: 'Missing fields' });
         if (USERS.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
-        USERS.push({ username, password, role });
+        const hashed = bcrypt.hashSync(password, 10);
+        USERS.push({ username, password: hashed, role });
         writeUsersToFile();
         res.json({ username, role });
     } catch (e) { res.status(500).json({ error: 'Failed to create user' }); }
+});
+
+// Public registration - creates user with role 'member' by default
+app.post('/api/register', (req, res) => {
+    try {
+        const { username, password } = req.body || {};
+        if (!username || !password) return res.status(400).json({ error: 'Missing fields' });
+        if (USERS.find(u => u.username === username)) return res.status(409).json({ error: 'User exists' });
+        const hashed = bcrypt.hashSync(password, 10);
+        USERS.push({ username, password: hashed, role: 'member' });
+        writeUsersToFile();
+        res.json({ username, role: 'member' });
+    } catch (e) { res.status(500).json({ error: 'Failed to register user' }); }
 });
 
 // UPDATE user (admin)
@@ -138,7 +170,7 @@ app.put('/api/users/:username', requireAuth(['admin']), (req, res) => {
         const { password, role } = req.body || {};
         const user = USERS.find(u => u.username === target);
         if (!user) return res.status(404).json({ error: 'Not found' });
-        if (password) user.password = password;
+        if (password) user.password = bcrypt.hashSync(password, 10);
         if (role) user.role = role;
         writeUsersToFile();
         res.json({ username: user.username, role: user.role });

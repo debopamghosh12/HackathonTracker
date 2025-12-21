@@ -368,15 +368,34 @@
         const API_URL = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://localhost:5000/api/hackathons" : "https://hackathontracker.onrender.com/api/hackathons";
         const listDiv = document.getElementById('hackList');
         const modal = document.getElementById('editModal');
-        const isLoggedIn = SessionManager.isAuthenticated();
-        const isGuest = sessionStorage.getItem('guestMode') === 'true';
-        const userRole = SessionManager.getRole();
-        const authToken = SessionManager.getToken();
-        const isAdmin = userRole === 'admin';
-        const isEditor = isAdmin || userRole === 'editor';
+        let isLoggedIn = SessionManager.isAuthenticated();
+        let isGuest = sessionStorage.getItem('guestMode') === 'true';
+        let userRole = SessionManager.getRole();
+        let authToken = SessionManager.getToken();
 
-        // Show admin link when admin
-        try { if (isAdmin) document.getElementById('adminLink').style.display = 'inline-block'; } catch(e) {}
+        // Validate token with server (if present) to ensure role is correct and session valid
+        async function validateAuth() {
+            authToken = SessionManager.getToken();
+            if (!authToken) { isLoggedIn = false; userRole = null; return; }
+            try {
+                const res = await fetch((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:5000/api/validate' : 'https://hackathontracker.onrender.com/api/validate', { headers: { 'Authorization': 'Bearer ' + authToken } });
+                if (!res.ok) throw new Error('Invalid');
+                const info = await res.json();
+                isLoggedIn = true;
+                userRole = info.role;
+                // show admin link if admin
+                try { document.getElementById('adminLink').style.display = (userRole === 'admin') ? 'inline-block' : 'none'; } catch(e) {}
+            } catch (e) {
+                SessionManager.clearSession();
+                isLoggedIn = false; userRole = null; authToken = null;
+                try { document.getElementById('adminLink').style.display = 'none'; } catch(e) {}
+            }
+        }
+
+        // Run validation before loading list
+        await validateAuth();
+        let isAdmin = userRole === 'admin';
+        let isEditor = isAdmin || userRole === 'editor';
         let allHackathons = [];
 
         //if (!isLoggedIn) { window.location.href = 'login.html'; }
@@ -477,7 +496,8 @@
 
         // --- 👇 IMPROVED TEAM CODE DESIGN ---
         let teamCodeHTML = "";
-        if (isLoggedIn && hack.teamCode) {
+        const canSeeCode = isLoggedIn && (userRole === 'member' || userRole === 'editor' || userRole === 'admin');
+        if (canSeeCode && hack.teamCode) {
             teamCodeHTML = `
                 <div class="team-code-container" style="margin-top: 5px; display: flex; align-items: center; gap: 5px; font-size: 11px; background: rgba(0, 212, 255, 0.05); padding: 4px 8px; border-radius: 4px; width: fit-content;">
                     <i class="fas fa-key" style="color: #00d4ff;"></i> 

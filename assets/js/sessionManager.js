@@ -157,6 +157,11 @@ const SessionManager = {
         localStorage.removeItem(this.TIMESTAMP_KEY);
         localStorage.removeItem(this.AUTH_KEY);
         sessionStorage.removeItem(this.SESSION_KEY);
+        // remove auth token/role as well
+        localStorage.removeItem(this.AUTH_TOKEN_KEY);
+        localStorage.removeItem(this.AUTH_ROLE_KEY);
+        sessionStorage.removeItem(this.AUTH_TOKEN_KEY);
+        sessionStorage.removeItem(this.AUTH_ROLE_KEY);
     },
 
     /**
