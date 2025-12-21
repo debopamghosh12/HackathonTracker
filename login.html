@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
   <script src="assets/js/sessionManager.js"></script>
+    <script src="assets/js/config.js"></script>
 
   <style>
     :root{
@@ -529,7 +530,7 @@
             await typeText('> SENDING CREDENTIALS...', 'info');
 
             try {
-                const res = await fetch('/api/login', {
+                const res = await fetch(window.API.LOGIN, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: usernameVal, password: passVal, remember: rememberMeCheckbox.checked })
@@ -661,11 +662,11 @@
             if (p !== p2) { regMsg.style.display='block'; regMsg.textContent='Passwords do not match'; return; }
             regSubmit.disabled = true; regSubmit.textContent = 'Registering...';
             try {
-                const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+                const res = await fetch(window.API.REGISTER, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ username: u, password: p }) });
                 const j = await res.json();
                 if (!res.ok) throw new Error(j.error || 'Register failed');
                 // Auto-login after register
-                const loginRes = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ username: u, password: p, remember: true }) });
+                const loginRes = await fetch(window.API.LOGIN, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ username: u, password: p, remember: true }) });
                 const loginJson = await loginRes.json();
                 if (!loginRes.ok) throw new Error(loginJson.error || 'Login failed after register');
                 if (window.SessionManager && typeof SessionManager.saveAuth === 'function') SessionManager.saveAuth(loginJson.token, loginJson.role, true);

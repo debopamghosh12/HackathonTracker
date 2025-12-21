@@ -365,7 +365,7 @@
         animate();
 
         // --- DASHBOARD LOGIC ---
-        const API_URL = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://localhost:5000/api/hackathons" : "https://hackathontracker.onrender.com/api/hackathons";
+        const API_URL = (window.API && window.API.HACKATHONS) ? window.API.HACKATHONS : ((window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://localhost:5000/api/hackathons" : "https://hackathontracker.onrender.com/api/hackathons");
         const listDiv = document.getElementById('hackList');
         const modal = document.getElementById('editModal');
         let isLoggedIn = SessionManager.isAuthenticated();

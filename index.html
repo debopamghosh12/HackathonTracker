@@ -12,6 +12,7 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="assets/js/sessionManager.js"></script>
+    <script src="assets/js/config.js"></script>
     <script>
         if (!SessionManager.isAuthenticated()) {
             window.location.href = "login.html";
@@ -249,7 +250,8 @@
                 const headers = { "Content-Type": "application/json" };
                 const token = SessionManager.getToken && SessionManager.getToken();
                 if (token) headers['Authorization'] = 'Bearer ' + token;
-                const res = await fetch(API_URL, { 
+                const targetUrl = (window.API && window.API.HACKATHONS) ? window.API.HACKATHONS : API_URL;
+                const res = await fetch(targetUrl, { 
                     method: "POST", 
                     headers, 
                     body: JSON.stringify(formData) 
