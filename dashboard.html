@@ -392,11 +392,19 @@
             }
         }
 
-        // Run validation before loading list
-        await validateAuth();
-        let isAdmin = userRole === 'admin';
-        let isEditor = isAdmin || userRole === 'editor';
+        // Run validation before loading list (avoid top-level await in non-module)
+        let isAdmin = false;
+        let isEditor = false;
         let allHackathons = [];
+        validateAuth().then(() => {
+            isAdmin = userRole === 'admin';
+            isEditor = isAdmin || userRole === 'editor';
+            loadHackathons();
+        }).catch(() => {
+            isAdmin = false;
+            isEditor = false;
+            loadHackathons();
+        });
 
         //if (!isLoggedIn) { window.location.href = 'login.html'; }
 
@@ -606,7 +614,7 @@
             const res = await fetch(`${API_URL}/${id}`, { method: 'PUT', headers, body: JSON.stringify(updatedData) });
             if (!res.ok) throw new Error('Update failed'); closeModal(); loadHackathons(); } catch (err) { console.error('Save error:', err); alert('Failed to save changes: ' + (err.message || '')); } }
         
-        loadHackathons();
+        // `loadHackathons()` is invoked after auth validation above
     </script>
 </body>
 </html>
