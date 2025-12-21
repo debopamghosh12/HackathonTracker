@@ -233,6 +233,7 @@
         <div class="nav-left">
             <a href="javascript:void(0)" onclick="goToAdd()" class="nav-btn"><i class="fas fa-plus"></i> ADD EVENT</a>
             <a href="team.html" class="team-btn"><i class="fas fa-users"></i> TEAM</a>
+            <a href="admin.html" id="adminLink" class="nav-btn" style="display:none"><i class="fas fa-user-shield"></i> USERS</a>
         </div>
         
         <div style="display:flex; align-items:center; gap: 10px;">
@@ -292,6 +293,15 @@
     </div>
 
     <div class="footer">Made by <span>BitRise</span> <i class="fas fa-rocket"></i></div>
+    
+    <!-- Debug panel (hidden by default) -->
+    <!-- <div id="debugPanel" style="position:fixed;left:12px;bottom:12px;background:rgba(0,0,0,0.6);color:#fff;padding:8px 10px;border-radius:8px;font-size:12px;z-index:9999;max-width:360px;display:none;box-shadow:0 6px 18px rgba(0,0,0,0.6);">
+        <div style="font-weight:700;margin-bottom:6px;color:#00d4ff">Debug</div>
+        <div id="dbg-userRole">userRole: <em>n/a</em></div>
+        <div id="dbg-isAdmin">isAdmin: <em>n/a</em></div>
+        <div id="dbg-isEditor">isEditor: <em>n/a</em></div>
+        <div id="dbg-storage" style="margin-top:6px;color:#ccc;font-size:11px;">storage: <em>n/a</em></div>
+    </div> -->
 
     <script>
         // --- PAGE ENTRY ANIMATION ---
@@ -364,12 +374,75 @@
         animate();
 
         // --- DASHBOARD LOGIC ---
-        const API_URL = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://localhost:5000/api/hackathons" : "https://hackathontracker.onrender.com/api/hackathons";
+        const API_URL = (window.API && window.API.HACKATHONS) ? window.API.HACKATHONS : ((window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://localhost:5000/api/hackathons" : "https://hackathontracker.onrender.com/api/hackathons");
         const listDiv = document.getElementById('hackList');
         const modal = document.getElementById('editModal');
-        const isLoggedIn = SessionManager.isAuthenticated();
-        const isGuest = sessionStorage.getItem('guestMode') === 'true';
+        let isLoggedIn = SessionManager.isAuthenticated();
+        let isGuest = sessionStorage.getItem('guestMode') === 'true';
+        let userRole = SessionManager.getRole();
+        let authToken = SessionManager.getToken();
+
+        // Validate token with server (if present) to ensure role is correct and session valid
+        async function validateAuth() {
+            authToken = SessionManager.getToken();
+            if (!authToken) { isLoggedIn = false; userRole = null; return; }
+                try {
+                    const validateUrl = (window.API && window.API.VALIDATE) ? window.API.VALIDATE : ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:5000/api/validate' : 'https://hackathontracker.onrender.com/api/validate');
+                    console.debug('Validating token at', validateUrl);
+                    const res = await fetch(validateUrl, { headers: { 'Authorization': 'Bearer ' + authToken } });
+                if (!res.ok) throw new Error('Invalid');
+                const info = await res.json();
+                isLoggedIn = true;
+                userRole = info.role;
+                // ensure stored role (session/local) matches server role
+                try {
+                    const storedRole = (SessionManager && typeof SessionManager.getRole === 'function') ? SessionManager.getRole() : null;
+                    const tokenStoredInLocal = (SessionManager && SessionManager.AUTH_TOKEN_KEY) ? !!localStorage.getItem(SessionManager.AUTH_TOKEN_KEY) : false;
+                    if (storedRole !== info.role && SessionManager && typeof SessionManager.saveAuth === 'function') {
+                        SessionManager.saveAuth(authToken, info.role, tokenStoredInLocal);
+                        console.debug('Synced stored role to', info.role);
+                    }
+                } catch (e) { console.warn('Role sync failed', e); }
+                    console.debug('User validated:', info);
+                    // show admin link if admin
+                    try { document.getElementById('adminLink').style.display = (userRole === 'admin') ? 'inline-block' : 'none'; } catch(e) { console.warn('adminLink missing', e); }
+                    // update debug panel if present
+                    try {
+                        const dbg = document.getElementById('debugPanel');
+                        if (dbg) {
+                            dbg.style.display = 'block';
+                            document.getElementById('dbg-userRole').innerHTML = 'userRole: <em>' + (userRole || 'null') + '</em>';
+                            document.getElementById('dbg-isAdmin').innerHTML = 'isAdmin: <em>' + (userRole === 'admin') + '</em>';
+                            document.getElementById('dbg-isEditor').innerHTML = 'isEditor: <em>' + (userRole === 'admin' || userRole === 'editor') + '</em>';
+                            const storedRole = SessionManager.getRole();
+                            const storedToken = SessionManager.getToken();
+                            const tokenShort = storedToken ? (storedToken.slice(0,6) + '...' + storedToken.slice(-6)) : 'null';
+                            document.getElementById('dbg-storage').innerHTML = 'storage: role=' + (storedRole||'null') + ', token=' + tokenShort;
+                        }
+                    } catch(e) { console.warn('debug panel update failed', e); }
+            } catch (e) {
+                SessionManager.clearSession();
+                isLoggedIn = false; userRole = null; authToken = null;
+                try { document.getElementById('adminLink').style.display = 'none'; } catch(e) {}
+            }
+        }
+
+        // Run validation before loading list (avoid top-level await in non-module)
+        let isAdmin = false;
+        let isEditor = false;
         let allHackathons = [];
+        validateAuth().then(() => {
+            isAdmin = userRole === 'admin';
+            isEditor = isAdmin || userRole === 'editor';
+            // refresh debug panel after role computed
+            try { const dbg = document.getElementById('debugPanel'); if (dbg) { document.getElementById('dbg-isAdmin').innerHTML = 'isAdmin: <em>' + isAdmin + '</em>'; document.getElementById('dbg-isEditor').innerHTML = 'isEditor: <em>' + isEditor + '</em>'; } } catch(e) {}
+            loadHackathons();
+        }).catch(() => {
+            isAdmin = false;
+            isEditor = false;
+            try { const dbg = document.getElementById('debugPanel'); if (dbg) { dbg.style.display = 'block'; document.getElementById('dbg-userRole').innerHTML = 'userRole: <em>null</em>'; document.getElementById('dbg-isAdmin').innerHTML = 'isAdmin: <em>false</em>'; document.getElementById('dbg-isEditor').innerHTML = 'isEditor: <em>false</em>'; } } catch(e) {}
+            loadHackathons();
+        });
 
         //if (!isLoggedIn) { window.location.href = 'login.html'; }
 
@@ -455,17 +528,23 @@
         let statusText = vacancy > 0 ? `<i class="fas fa-check-circle" style="color:#00ff88"></i> ${vacancy} Slot(s) Open` : `<i class="fas fa-times-circle" style="color:#ff4444"></i> Team Full`;
         let statusColorClass = vacancy > 0 ? 'status-open' : 'status-full';
 
-        const adminButtons = isLoggedIn ? `
-            <button class="action-btn edit-btn" onclick="openEdit('${hack._id}', '${hack.name}', '${hack.startDate}', '${hack.endDate}', '${hack.registered}', '${currentStatus}', '${hack.teamMembers || ''}', '${hack.certificate || ''}', '${hack.photos || ''}')"><i class="fas fa-pencil-alt"></i></button>
-            <button class="action-btn delete-btn" onclick="deleteHack('${hack._id}')"><i class="fas fa-trash-alt"></i></button>` : '';
+        let adminButtons = '';
+        if (isLoggedIn && isEditor) {
+            adminButtons += `<button class="action-btn edit-btn" onclick="openEdit('${hack._id}', '${hack.name}', '${hack.startDate}', '${hack.endDate}', '${hack.registered}', '${currentStatus}', '${hack.teamMembers || ''}', '${hack.certificate || ''}', '${hack.photos || ''}')"><i class="fas fa-pencil-alt"></i></button>`;
+        }
+        if (isLoggedIn && isAdmin) {
+            adminButtons += `<button class="action-btn delete-btn" onclick="deleteHack('${hack._id}')"><i class="fas fa-trash-alt"></i></button>`;
+        }
 
-        const certBtn = hack.certificate ? `<a href="${hack.certificate}" target="_blank" class="proof-btn"><i class="fas fa-certificate"></i> Cert</a>` : '';
-        const photoBtn = hack.photos ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : '';
+        const canSeeLink = isLoggedIn && (userRole === 'member' || userRole === 'editor' || userRole === 'admin');
+        const certBtn = (canSeeLink && hack.certificate) ? `<a href="${hack.certificate}" target="_blank" class="proof-btn"><i class="fas fa-certificate"></i> Cert</a>` : (hack.certificate ? `<span class="proof-btn" style="opacity:0.5;cursor:default">Cert (login)</span>` : '');
+        const photoBtn = (canSeeLink && hack.photos) ? `<a href="${hack.photos}" target="_blank" class="proof-btn"><i class="fas fa-images"></i> Photos</a>` : (hack.photos ? `<span class="proof-btn" style="opacity:0.5;cursor:default">Photos (login)</span>` : '');
         const calLink = generateCalendarLink(hack.name, hack.startDate, hack.endDate, hack.location);
 
         // --- 👇 IMPROVED TEAM CODE DESIGN ---
         let teamCodeHTML = "";
-        if (isLoggedIn && hack.teamCode) {
+        const canSeeCode = isLoggedIn && (userRole === 'member' || userRole === 'editor' || userRole === 'admin');
+        if (canSeeCode && hack.teamCode) {
             teamCodeHTML = `
                 <div class="team-code-container" style="margin-top: 5px; display: flex; align-items: center; gap: 5px; font-size: 11px; background: rgba(0, 212, 255, 0.05); padding: 4px 8px; border-radius: 4px; width: fit-content;">
                     <i class="fas fa-key" style="color: #00d4ff;"></i> 
@@ -502,7 +581,7 @@
                 </div>
                 
                 <div class="btn-group">
-                    <a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a>
+                    ${ canSeeLink ? `<a href="${hack.link}" target="_blank" class="visit-btn">VISIT LINK ↗</a>` : `<a href="login.html" class="visit-btn" title="Login to view registration link">View (login)</a>` }
                     <a href="report.html?id=${hack._id}" target="_blank" class="visit-btn report-btn"><i class="fas fa-file-alt"></i> REPORT</a>
                     ${adminButtons}
                 </div>
@@ -559,13 +638,22 @@
         });
     }, 1000);
 }
-        async function deleteHack(id) { if(!confirm("Are you sure?")) return; try { await fetch(`${API_URL}/${id}`, { method: 'DELETE' }); loadHackathons(); } catch (err) { console.error('Delete error:', err); alert('Failed to delete hackathon'); } }
+        async function deleteHack(id) { if(!confirm("Are you sure?")) return; try { const headers = {};
+            if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+            const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE', headers });
+            if (!res.ok) throw new Error('Delete failed');
+            loadHackathons();
+        } catch (err) { console.error('Delete error:', err); alert('Failed to delete hackathon: ' + (err.message || '')); } }
         function openEdit(id, name, date, endDate, reg, status, members, cert, photos) { document.getElementById('edit-id').value = id; document.getElementById('edit-name').value = name; document.getElementById('edit-date').value = date; document.getElementById('edit-end-date').value = endDate; document.getElementById('edit-members').value = members; document.getElementById('edit-reg').value = reg; document.getElementById('edit-status').value = status; document.getElementById('edit-cert').value = cert; document.getElementById('edit-photos').value = photos; modal.style.display = 'flex'; }
         function closeModal() { modal.style.display = 'none'; }
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'flex') closeModal(); });
-        async function saveEdit() { const id = document.getElementById('edit-id').value; const status = document.getElementById('edit-status').value; try { if (status === "Winner") triggerConfetti(); const updatedData = { name: document.getElementById('edit-name').value, startDate: document.getElementById('edit-date').value, endDate: document.getElementById('edit-end-date').value, teamMembers: document.getElementById('edit-members').value, registered: document.getElementById('edit-reg').value, currentStatus: status, certificate: document.getElementById('edit-cert').value, photos: document.getElementById('edit-photos').value }; const res = await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) }); if (!res.ok) throw new Error('Update failed'); closeModal(); loadHackathons(); } catch (err) { console.error('Save error:', err); alert('Failed to save changes'); } }
+        async function saveEdit() { const id = document.getElementById('edit-id').value; const status = document.getElementById('edit-status').value; try { if (status === "Winner") triggerConfetti(); const updatedData = { name: document.getElementById('edit-name').value, startDate: document.getElementById('edit-date').value, endDate: document.getElementById('edit-end-date').value, teamMembers: document.getElementById('edit-members').value, registered: document.getElementById('edit-reg').value, currentStatus: status, certificate: document.getElementById('edit-cert').value, photos: document.getElementById('edit-photos').value };
+            const headers = { 'Content-Type': 'application/json' };
+            if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+            const res = await fetch(`${API_URL}/${id}`, { method: 'PUT', headers, body: JSON.stringify(updatedData) });
+            if (!res.ok) throw new Error('Update failed'); closeModal(); loadHackathons(); } catch (err) { console.error('Save error:', err); alert('Failed to save changes: ' + (err.message || '')); } }
         
-        loadHackathons();
+        // `loadHackathons()` is invoked after auth validation above
     </script>
 </body>
 </html>

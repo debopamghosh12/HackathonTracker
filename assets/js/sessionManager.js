@@ -8,6 +8,8 @@ const SessionManager = {
     SESSION_KEY: 'sessionId',
     TIMESTAMP_KEY: 'sessionTimestamp',
     AUTH_KEY: 'isTeamMember',
+    AUTH_TOKEN_KEY: 'authToken',
+    AUTH_ROLE_KEY: 'authRole',
 
     /**
      * Generate a unique session ID
@@ -49,6 +51,22 @@ const SessionManager = {
         localStorage.setItem(this.TIMESTAMP_KEY, Date.now().toString());
         localStorage.setItem(this.AUTH_KEY, 'true');
         sessionStorage.setItem(this.SESSION_KEY, sessionId);
+    },
+
+    /**
+     * Save server-issued auth token and role
+     * @param {string} token
+     * @param {string} role
+     * @param {boolean} persistent
+     */
+    saveAuth(token, role, persistent = false) {
+        if (persistent) {
+            localStorage.setItem(this.AUTH_TOKEN_KEY, token);
+            localStorage.setItem(this.AUTH_ROLE_KEY, role);
+        } else {
+            sessionStorage.setItem(this.AUTH_TOKEN_KEY, token);
+            sessionStorage.setItem(this.AUTH_ROLE_KEY, role);
+        }
     },
 
     /**
@@ -111,19 +129,24 @@ const SessionManager = {
      * @returns {boolean} True if user is authenticated
      */
     isAuthenticated() {
+        // Prefer token-based auth (server-issued)
+        const token = sessionStorage.getItem(this.AUTH_TOKEN_KEY) || localStorage.getItem(this.AUTH_TOKEN_KEY);
+        if (token) return true;
+
+        // Fallback to legacy sessionId/team member flag
         const hasAuth = localStorage.getItem(this.AUTH_KEY) === 'true';
         const hasSession = sessionStorage.getItem(this.SESSION_KEY) || localStorage.getItem(this.SESSION_KEY);
-        
-        if (!hasAuth || !hasSession) {
-            return false;
-        }
-        
-        // If it's a persistent session, validate it
-        if (localStorage.getItem(this.SESSION_KEY)) {
-            return this.validateSession();
-        }
-        
+        if (!hasAuth || !hasSession) return false;
+        if (localStorage.getItem(this.SESSION_KEY)) return this.validateSession();
         return true;
+    },
+
+    getRole() {
+        return sessionStorage.getItem(this.AUTH_ROLE_KEY) || localStorage.getItem(this.AUTH_ROLE_KEY) || null;
+    },
+
+    getToken() {
+        return sessionStorage.getItem(this.AUTH_TOKEN_KEY) || localStorage.getItem(this.AUTH_TOKEN_KEY) || null;
     },
 
     /**
@@ -134,6 +157,11 @@ const SessionManager = {
         localStorage.removeItem(this.TIMESTAMP_KEY);
         localStorage.removeItem(this.AUTH_KEY);
         sessionStorage.removeItem(this.SESSION_KEY);
+        // remove auth token/role as well
+        localStorage.removeItem(this.AUTH_TOKEN_KEY);
+        localStorage.removeItem(this.AUTH_ROLE_KEY);
+        sessionStorage.removeItem(this.AUTH_TOKEN_KEY);
+        sessionStorage.removeItem(this.AUTH_ROLE_KEY);
     },
 
     /**
@@ -167,3 +195,10 @@ const SessionManager = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = SessionManager;
 }
+
+// Ensure browser pages can access SessionManager as a window property
+try {
+    if (typeof window !== 'undefined') {
+        window.SessionManager = SessionManager;
+    }
+} catch (e) { /* ignore when window not present */ }
