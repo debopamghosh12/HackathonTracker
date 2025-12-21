@@ -377,14 +377,17 @@
         async function validateAuth() {
             authToken = SessionManager.getToken();
             if (!authToken) { isLoggedIn = false; userRole = null; return; }
-            try {
-                const res = await fetch((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:5000/api/validate' : 'https://hackathontracker.onrender.com/api/validate', { headers: { 'Authorization': 'Bearer ' + authToken } });
+                try {
+                    const validateUrl = (window.API && window.API.VALIDATE) ? window.API.VALIDATE : ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://localhost:5000/api/validate' : 'https://hackathontracker.onrender.com/api/validate');
+                    console.debug('Validating token at', validateUrl);
+                    const res = await fetch(validateUrl, { headers: { 'Authorization': 'Bearer ' + authToken } });
                 if (!res.ok) throw new Error('Invalid');
                 const info = await res.json();
                 isLoggedIn = true;
                 userRole = info.role;
-                // show admin link if admin
-                try { document.getElementById('adminLink').style.display = (userRole === 'admin') ? 'inline-block' : 'none'; } catch(e) {}
+                    console.debug('User validated:', info);
+                    // show admin link if admin
+                    try { document.getElementById('adminLink').style.display = (userRole === 'admin') ? 'inline-block' : 'none'; } catch(e) { console.warn('adminLink missing', e); }
             } catch (e) {
                 SessionManager.clearSession();
                 isLoggedIn = false; userRole = null; authToken = null;
